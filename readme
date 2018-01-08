@@ -1,0 +1,34 @@
+HOW TO RUN A SIMULATION :
+
+1) Compile the code
+
+In order to compile the code, choose the compiler and compiler options in the makefile.
+For example, to run a simulation on Linux or Mac with GNU compilers and basic options, comment all lines except :
+MPIFC = mpif90 -fopenmp
+MPICC = mpicc -fopenmp
+CC = gcc
+OPTSF90 = -O3
+OPTSF77 = -O3
+OPTSCC = -O3 -std=c99
+
+Once, this is done, execute the makefile in the terminal :
+$:make
+
+2) Fill out the input deck 
+
+Everything is detailed in the input deck file “input_deck”
+
+3) Run the simulation by executing in the terminal
+
+$:./upic-emma 
+for a simulation using one 1 MPI node only
+
+or
+
+$:mpirun -n 4 uric-emma
+for a simulation using 4 MPI nodes
+
+HOW TO DIAGNOSE THE RESULTS
+
+1) execute in the terminal :
+$:make extract
