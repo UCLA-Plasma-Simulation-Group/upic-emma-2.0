@@ -433,7 +433,7 @@
 ! kyp = number of complex grids in each field partition in y direction
       kyp = (ny - 1)/nvp + 1
 ! npmax = maximum number of electrons in each partition
-      npmax = (np/nvp)*1.25
+      npmax = (np/nvp)*2.5
 ! myp1 = number of tiles in y direction
       myp1 = (nyp - 1)/my + 1; mxyp1 = mx1*myp1
 ! nterf = number of shifts required by field manager (0=search)
@@ -536,7 +536,7 @@
       nps = 1
       npp = 0
       call mpdistr2h(relativity,me_real,ci,part,edges,npp,nps,vtx,vty,vtz,vx0,vy0,vz0,npx,npy,&
-     		        &nx,ny,ipbc,x,y,ierr)
+     		        &nx,ny,ipbc,x,y,density_x,density_y,ierr)
 ! check for macro electrons initialization error
       if (ierr /= 0) then
         if (kstrt==1) then
@@ -550,7 +550,7 @@
       	npsi = 1
         nppi = 0
       	call mpdistr2h(relativity,mi_real,ci,parti,edges,nppi,npsi,vtxi,vtyi,vtzi,vx0i,vy0i,vz0i,npx,npy,&
-                      &nx,ny,ipbc,x,y,ierr)
+                      &nx,ny,ipbc,x,y,density_x,density_y,ierr)
 ! check for macro ions initialization error
      	if (ierr /= 0) then
         	if (kstrt==1) then
@@ -692,6 +692,12 @@
       		call wmpaguard2(qi,nyp,tguard,nx,kstrt,nvp)
 	  	end if
 ! Diagnostic of the two first particle distribution moments in real space ( M Touati )
+	  cutot = cue
+      qtot  = qe
+      if (movion) then
+        cutot = cutot + cui
+        qtot  = qtot  + qi
+      end if
       	if (store_cond) then
         	call DIAG_REAL_MOMENTS(N_rho, N_jx, N_jy , N_jz, nyp, nx, nxe, nypmx,&
                                de, phtime, yp, x, qtot, cutot, tdiag)
@@ -703,12 +709,6 @@
         	end if
       	end if
 	  end if
-	  cutot = cue
-      qtot  = qe
-      if (movion) then
-      	cutot = cutot + cui
-      	qtot  = qtot  + qi
-      end if
 !
 ! transform charge to fourier space with OpenMP:
 ! updates qt, nterf, and ierr, modifies qtot

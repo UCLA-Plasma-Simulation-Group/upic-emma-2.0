@@ -20,6 +20,7 @@
 ! update: february 9, 2016
 !
       use libmpinit2_h
+      use libprofile_h
       implicit none
 !
       contains
@@ -80,7 +81,7 @@
 !      subroutine mpdistr2h(part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,  &
 !     &npx,npy,nx,ny,ipbc,ierr)                                                ! M. Touati
 	  subroutine mpdistr2h(relativity, mass_real,ci, part, edges, npp, nps,&
-	 &vtx, vty, vtz, vdx, vdy, vdz, npx, npy, nx, ny, ipbc, x, y, ierr)                                             ! M. Touati
+	 &vtx, vty, vtz, vdx, vdy, vdz, npx, npy, nx, ny, ipbc, x, y, densx, densy, ierr)     ! M. Touati
 ! calculates initial particle co-ordinates and velocities in 2d
 ! with uniform density and maxwellian velocity with drift
       implicit none
@@ -93,6 +94,7 @@
       real, dimension(:), intent(in) :: edges
       real, dimension(nx+2), intent(in) :: x
       real, dimension(ny+2), intent(in) :: y
+      character (len=*), intent(in)  :: densx, densy
 ! local data
       integer :: idimp, npmax, idps
 ! extract dimensions
@@ -101,7 +103,7 @@
 ! call low level procedure
       if (relativity == 1) then
       	call PDISTR2HR(ci,mass_real,part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,&
-       &npx,npy,nx,ny,idimp,npmax,idps,ipbc,x,y,ierr)                          ! M. Touati
+       &npx,npy,nx,ny,idimp,npmax,idps,ipbc,x,y,densx,densy,ierr)                          ! M. Touati
       else
 !      call PDISTR2H(part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,npx,npy, &
 !     &nx,ny,idimp,npmax,idps,ipbc,ierr)                                       ! M. Touati
@@ -141,7 +143,7 @@
 !
 !-----------------------------------------------------------------------
 	  subroutine PDISTR2HR(ci,mass_real,part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,&
-     &npx,npy,nx,ny,idimp,npmax,idps,ipbc,x,y,ierr)
+     &npx,npy,nx,ny,idimp,npmax,idps,ipbc,x,y,densx,densy,ierr)
      	implicit none
      	real, intent(in)                            :: mass_real,ci
 	    integer, intent(in)                         :: nps, npx, npy, nx, ny
@@ -152,6 +154,7 @@
         real, dimension(idps), intent(in)           :: edges
         real, dimension(nx+2), intent(in)           :: x
         real, dimension(ny+2), intent(in)           :: y
+        character (len=*), intent(in)               :: densx, densy
 ! local data
       	integer :: j, k, npt, npxyp
       	real    :: edgelx, edgely, at1, at2, xt, yt, vxt, vyt, vzt, mu
@@ -161,6 +164,7 @@
         integer :: N
         real(8), dimension(:,:), allocatable :: Fp
         real(8)  :: rand
+        real, dimension(:), allocatable :: xp, yp
         pi = 3.141592653589793
       	ierr = 0
 ! particle distribution constant
@@ -180,14 +184,17 @@
         	at1 = (x(nx)-x(2))/real(npx)
       	endif
 		mu = (ci*vtx)**(-2.)
+        allocate(xp(npx), yp(npy))
+        call getdensity1d(densx, 'x1', edgelx, at1, nx, npx, 32, xp)
+        call getdensity1d(densy, 'x2', edgely, at2, ny, npy, 32, yp)
 		if (Bessel_Kn(2,mu)==0.) then
 ! uniform density profile
       		do k = 1, npy
-      			yt = edgely + at2*(real(k) - 0.5)
+      			yt = yp(k) !edgely + at2*(real(k) - 0.5)
       			do j = 1, npx
-     				xt = edgelx + at1*(real(j) - 0.5)
+     				xt = xp(j) !edgelx + at1*(real(j) - 0.5)
 ! maxwellian velocity distribution
-					rand  = ranorm()
+				rand  = ranorm()
       				vxt   = vtx*rand
       				rand  = ranorm()
       				vyt   = vty*rand
@@ -215,9 +222,9 @@
 			call equipartition_function(mu, ci, N, Fp)
 ! uniform density profile
 			do k = 1, npy, 1
-      			yt = edgely + at2*(real(k) - 0.5)
+      			yt = yp(k) !edgely + at2*(real(k) - 0.5)
       			do j = 1, npx, 1
-      				xt = edgelx + at1*(real(j) - 0.5)
+      				xt = xp(j) !edgelx + at1*(real(j) - 0.5)
 ! Maxwell-Juttner distribution :
 	  				if ( (vtx .ne. vty) .or. (vtx .ne. vtz) .or. (vty .ne. vtz) ) then
 	  					stop
@@ -257,6 +264,8 @@
       		end do
       		deallocate(Fp)
 		end if
+        deallocate(xp)
+        deallocate(yp)
       	npxyp = 0
 ! add correct drift
       	sum4(1) = 0.0d0

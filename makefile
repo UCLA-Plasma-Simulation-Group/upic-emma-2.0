@@ -35,20 +35,20 @@ OPTSCC = -O3 -std=c99
 # Intel compilers #
 ###################
 
-# MPI
+## MPI
 #MPIFC = mpiifort -openmp
 #MPICC = mpiicc -openmp
-
+#
 #CC = icc
-
+#
 #OPTSF90 = -O3
 #OPTSF90 = -O3 -r8
 #OPTSF90 = -O3 -CB -r8 -warn all -std90
-
+#
 #OPTSF77 = -O3
 #OPTSF77 = -O3 -r8
 #OPTSF77 = -O3 -CB -r8 -warn all -std77
-
+#
 #OPTSCC = -O3 -std=c99
 #OPTSCC = -O3 -no-vec -Wall -std=c99
 #LEGACY = -nofor_main
@@ -87,7 +87,7 @@ ESHOBJS = $(addprefix $(OBJ_PATH), libmpinit2_h.o \
 
 EMHOBJS = $(addprefix $(OBJ_PATH), libmpbpush2_h.o libmpcurd2_h.o )
 
-ESMODS = $(addprefix $(OBJ_PATH), modmpinit2.o \
+ESMODS = $(addprefix $(OBJ_PATH), rvm.o modprofile2.o modmpinit2.o \
         modmpsort2.o modmpgard2.o  \
         modmpfft2.o  modmpfield2.o \
         modmpfieldpml2.o antenna.o\
@@ -174,6 +174,12 @@ $(OBJ_PATH)libmpfield2_h.o : $(SRC_PATH_F90)libmpfield2_h.f90
 $(OBJ_PATH)libmpfieldpml2_h.o : $(SRC_PATH_F90)libmpfieldpml2_h.f90
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpfieldpml2_h.o -c $(SRC_PATH_F90)libmpfieldpml2_h.f90
 
+$(OBJ_PATH)rvm.o : $(SRC_PATH_F90)parser.f90
+	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)rvm.o -c $(SRC_PATH_F90)parser.f90
+
+$(OBJ_PATH)modprofile2.o : $(SRC_PATH_F90)modprofile2.f90
+	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)modprofile2.o -c $(SRC_PATH_F90)modprofile2.f90
+
 $(OBJ_PATH)modmpinit2.o : $(SRC_PATH_F90)modmpinit2.f90 $(OBJ_PATH)libmpinit2_h.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)modmpinit2.o -c $(SRC_PATH_F90)modmpinit2.f90
 
@@ -224,7 +230,7 @@ clean_obj :
 	rm -f $(OBJ_PATH)*.o
 
 clean :
-	rm -f $(TRG_PATH)Upic-Emma $(OBJ_PATH)*.o $(MOD_PATH)*.mod
+	rm -f $(TRG_PATH)upic-emma $(OBJ_PATH)*.o $(MOD_PATH)*.mod
 
 clean_results :
 	rm -rf results/
