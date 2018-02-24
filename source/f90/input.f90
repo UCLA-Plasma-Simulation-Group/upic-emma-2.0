@@ -47,6 +47,8 @@ module input
 		real, public             :: L_PML
 ! Diagnostics :
 		real, public             :: Delta_t_diag		
+! density
+        character(len=2048), public :: density_x, density_y
 
 	contains
 
@@ -163,6 +165,11 @@ module input
 ! Diagnostics :
 			case ('#Delta_t_diag')
 				Delta_t_diag = get_real(str(istr+1:))
+! Density :
+			case ('#density_x')
+				density_x = get_line(str(istr+1:))
+			case ('#density_y')
+				density_y = get_line(str(istr+1:))
 		end select
 		end do read
 		close(1)
@@ -204,4 +211,10 @@ module input
 		return
 		end function get_char
 
+        function get_line(str)
+                character(len=*), intent(in) :: str
+                Character(len=2048) :: get_line
+                read (str, '(A/)') get_line
+                return
+                end function get_line
 end module input
