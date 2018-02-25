@@ -2,7 +2,7 @@
 !
 ! A recursive descent parser for the following parsing expression grammar (PEG)
 !
-! Opexpr  = L0EXPR EOL
+! Opexpr  = L4EXPR EOL
 ! L0EXPR  = L1EXPR (L1OPR L1EXPR)*
 ! L1EXPR  = L2EXPR (L2OPR L2EXPR)*
 ! L2EXPR  = L3OPR? L3EXPR
@@ -29,9 +29,6 @@
 ! optimizations when compiling (for example, common subexpression elimination, branch
 ! elimination, constant folding. Even maybe expression simplication)
 
-! For this particular gramma, using Packrat algorithm has no benefit, should
-! consider using plain recursive descent instead
-!
 module m_rvm
     implicit none
     private
@@ -77,7 +74,6 @@ module m_rvm
         integer                     :: pp   = 1  ! current parsing position
         integer                     :: rp   = 1  ! current register position
         integer                     :: ip   = 0  ! current instruction queue position
-        integer, dimension(2)       :: var_len = 0   ! the length of the shotest and longest variable name
         integer                     :: nvar = 0  ! number of variables
         character (len=MAX_LEN_VAR), dimension(:), allocatable :: var_name
         integer, dimension(:, :), allocatable :: inst
@@ -86,12 +82,7 @@ module m_rvm
         real(p_k_parse), dimension(:), allocatable :: reg_parse  ! store register value at parse (tmp)
         ! reversely linked to the instruction in memo writting to this register
         !integer, dimension(:,:), allocatable :: reg_parse_link
-        !type(t_parse_result), dimension(:,:), allocatable :: memo
     end type t_parser
-
-    ! tags for nonterminal terms
-    integer, parameter :: p_l0expr = 1, p_l1expr = 2, p_l2expr = 3, p_l3expr = 4, &
-                          p_l4expr = 5, p_l5expr = 6, p_l6expr = 7, p_term = 8
 
     ! compile time constants are .le. 0
     integer, parameter :: flag_noparse  = 0,  &
@@ -107,14 +98,15 @@ module m_rvm
                           err_var       = p_error-6, &
                           err_opr       = p_error-7, &
                           err_eof       = p_error-8, &
-                          err_noterm    = p_error-9
+                          err_noterm    = p_error-9, &
+                          err_runtime   = p_error-9999
 
     ! runtime instructions
     ! NOTE1: if you want to add a function, you need to modify 4 places:
     ! 1) increase the NUM_FUNCTIONS parameter above, 2) add the signature below, 
     ! 3) add signature to the functions list below, 4) add definition to the eval_parse function
     ! 
-    ! NOTE2: if you want to add a constant, you need to modify 2 place:
+    ! NOTE2: if you want to add a constant, you need to modify 2 places:
     ! 1) increase the NUM_CONSTANT parameter above
     ! 2) add constants to the list below, note that it has lower priority than user
     ! defined variables
@@ -245,7 +237,6 @@ module m_rvm
         !local
         integer :: i, j, e
         is_buildin = 0
-        j = 1
         e = 1
         do while (e <= len_trim(op%name))
             j = e
@@ -256,6 +247,7 @@ module m_rvm
                     exit
                 endif
             enddo
+            !if (DEBUG_VERBOSE) print*, 'try to match ', this%expr(this%pp:this%pp+e-j), ' with ', op%name(j:e)
             if (op%name(j:e) == this%expr(this%pp:this%pp+e-j)) then
                 is_buildin = e - j + 1
                 if (DEBUG) print*, 'matched opr "', op%name(j:e), '", next pos = ', this%pp+e-j+1
@@ -269,25 +261,22 @@ module m_rvm
 !----------------------------------------------------------------------------------------------------------
 ! record the parsing result
 !----------------------------------------------------------------------------------------------------------
-    subroutine write_stat( this, stat, level, next, co )
+    subroutine write_stat( this, stat, next, co )
         implicit none
         type(t_parser),        intent (inout) :: this
         type(t_parse_result),  intent (inout) :: stat
-        integer,               intent (in)    :: level, next ! level: which lxexpr we are parsing; next: next position to parse
+        integer,               intent (in)    :: next ! next: next position to parse
         integer, dimension(:), intent (in)    :: co  ! instruction to record
         stat%next = next
         stat%code(1:size(co)) = co
-        !this%memo(level, this%pp) = stat
         if (co(1) > flag_failed) then
             !this%reg_parse_link(:, this%rp) = (/ level, this%pp /)
             if (co(1) /= op_noop%id) then
                 ! if loading the variables or constants, don't increase register count
-                if (.not. (co(1) == flag_load .and. co(2) < this%nvar + NUM_CONSTANT)) &
+                if (.not. (co(1) == flag_load .and. co(2) <= this%nvar + NUM_CONSTANT)) &
                     & this%rp = this%rp + 1
-                !---------------- temporary  should move to compile ------------------
                 this%ip = this%ip + 1
                 this%inst_parse(:, this%ip) = stat%code
-                !---------------- temporary  should move to compile ------------------
             endif
         endif
     end subroutine
@@ -295,12 +284,11 @@ module m_rvm
 !----------------------------------------------------------------------------------------------------------
 ! match the pattern: PATTERN1 (OPR PATTERN2)*
 !----------------------------------------------------------------------------------------------------------
-    recursive subroutine meta_rule1( pattern1, pattern2, opr, level, this, stat, times )
+    recursive subroutine meta_rule1( this, pattern1, pattern2, opr, stat, times )
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
         type(t_buildin), dimension(:),     intent (in)    :: opr
-        integer,              intent (in)    :: level
         integer, optional,    intent (in)    :: times
         interface
 
@@ -327,57 +315,46 @@ module m_rvm
         else
             maxt = len_trim(this%expr)
         endif
-        !if (this%memo(level, this%pp)%code(1) == flag_noparse) then
-            pp = this%pp  ! back up the position because this%pp may be changed by term ()
+        pp = this%pp  ! back up the position because this%pp may be changed by term ()
 
-            call pattern1(this, lstat)
-            if (.not.(lstat%code(1) <= flag_failed)) then  ! left operand failed
-            !    this%memo(level, pp)%code = lstat%code
-            !else
-                ! start parsing (L1OPR L1EXPR)*
-                do t = 1, maxt
-                    ! find the operator
-                    d = 0
-                    do i = 1, size(opr)
-                        d = is_buildin( this, opr(i))
-                        if ( d > 0 ) then
-                            this%pp = this%pp + d  ! consume operator
-                            exit
-                        endif
-                    enddo
-                    if ( d > 0) then
-                        call pattern2(this, rstat)
-                        if (rstat%code(1) == flag_failed) then  ! second pattern not found
-                            !call handle_error(this, this%memo(level, this%pp)%code, (/ err_opr, this%pp /), trim(opr(i)%name) )
-                            call handle_error(this, stat%code, (/ err_opr, this%pp /), trim(opr(i)%name) )
-                        else                                ! we match the pattern successfully
-                            call write_stat( this, stat, level, rstat%next, (/ opr(i)%id, this%rp, lstat%code(2), rstat%code(2) /))
-                            if (DEBUG) print*, 'matched ', this%expr(pp:this%pp-1), ', instruction =', stat%code(1:4), stat%next
-                            lstat = stat
-                        endif
-                    else
-                        !this%memo(level, pp)%code = lstat%code
+        call pattern1(this, lstat)
+        if (lstat%code(1) > flag_failed) then  ! left operand is legit
+            do t = 1, maxt
+                ! find the operator
+                d = 0
+                do i = 1, size(opr)
+                    d = is_buildin( this, opr(i))
+                    if ( d > 0 ) then
+                        this%pp = this%pp + d  ! consume operator
                         exit
                     endif
                 enddo
-            endif
-            stat = lstat
-        !else
-        !    stat = this%memo(level, pp)
-        !    this%pp = stat%next
-        !    if (DEBUG) print*, 'fetching result ', stat
-        !endif
+                if ( d > 0) then
+                    call pattern2(this, rstat)
+                    if (rstat%code(1) == flag_failed) then  ! second pattern not found
+                        !call handle_error(this, this%memo(level, this%pp)%code, (/ err_opr, this%pp /), trim(opr(i)%name) )
+                        call handle_error(this, stat%code, (/ err_opr, this%pp /), trim(opr(i)%name) )
+                    else                                ! we match the pattern successfully
+                        call write_stat( this, stat, rstat%next, (/ opr(i)%id, this%rp, lstat%code(2), rstat%code(2) /))
+                        if (DEBUG) print*, 'matched "', this%expr(pp:this%pp-1), '", instruction =', stat%code(1:4), stat%next
+                        lstat = stat
+                    endif
+                else
+                    exit
+                endif
+            enddo
+        endif
+        stat = lstat
     end subroutine meta_rule1
 
 !----------------------------------------------------------------------------------------------------------
 ! match pattern OPR? PATTERN
 !----------------------------------------------------------------------------------------------------------
-    recursive subroutine meta_rule2( pattern, opr, level, this, stat, opr_reg )
+    recursive subroutine meta_rule2( this, pattern, opr, stat, opr_reg )
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
         type(t_buildin), dimension(:),     intent (in)    :: opr
-        integer,              intent (in)    :: level
         type(t_buildin), dimension(:),optional, intent (in)    :: opr_reg
         interface
             recursive subroutine pattern(this, stat)
@@ -391,32 +368,28 @@ module m_rvm
         !local
         integer :: d, i, pp
         d = 0
-        !if (this%memo(level, this%pp)%code(1) == flag_noparse) then
-            pp = this%pp
-            do i = 1, size(opr)
-                d = is_buildin( this, opr(i))
-                if ( d > 0 ) then
-                    this%pp = this%pp + d  ! consume operator
-                    exit
-                endif
-            enddo
-            call pattern(this, stat)
+        pp = this%pp
+        do i = 1, size(opr)
+            d = is_buildin( this, opr(i))
             if ( d > 0 ) then
-                if (stat%code(1) == flag_failed) then
-                    !call handle_error( this, this%memo(level, this%pp)%code, (/ err_opr, pp /), trim(opr(i)%name) )
-                    call handle_error( this, stat%code, (/ err_opr, pp /), trim(opr(i)%name) )
-                else
-                    if (present(opr_reg)) then
-                        call write_stat( this, stat, level, stat%next, (/ opr_reg(i)%id, this%rp, stat%code(2) /))
-                    else
-                        call write_stat( this, stat, level, stat%next, (/ opr(i)%id, this%rp, stat%code(2) /))
-                    endif
-                endif
+                this%pp = this%pp + d  ! consume operator
+                exit
             endif
-        !else
-        !    stat = this%memo(level, pp)
-        !    this%pp = stat%next
-        !endif
+        enddo
+        call pattern(this, stat)
+        if ( d > 0 ) then
+            if (stat%code(1) == flag_failed) then
+                !call handle_error( this, this%memo(level, this%pp)%code, (/ err_opr, pp /), trim(opr(i)%name) )
+                call handle_error( this, stat%code, (/ err_opr, pp /), trim(opr(i)%name) )
+            else
+                if (present(opr_reg)) then
+                    call write_stat( this, stat, stat%next, (/ opr_reg(i)%id, this%rp, stat%code(2) /))
+                else
+                    call write_stat( this, stat, stat%next, (/ opr(i)%id, this%rp, stat%code(2) /))
+                endif
+                if (DEBUG) print*, 'matched "', this%expr(pp:this%pp-1), '", instruction =', stat%code(1:3), stat%next
+            endif
+        endif
     end subroutine
 
 !----------------------------------------------------------------------------------------------------------
@@ -426,7 +399,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule1(term, l6expr, (/op_pow/), p_l6expr, this, stat)
+        call meta_rule1(this, term, l6expr, (/op_pow/), stat)
         if (DEBUG_VERBOSE) print*, 'l6expr stat=', stat
     end subroutine
 
@@ -437,7 +410,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule1(l6expr, l6expr, (/op_mul, op_div, op_mod/), p_l5expr, this, stat)
+        call meta_rule1(this, l6expr, l6expr, (/op_mul, op_div, op_mod/), stat)
         if (DEBUG_VERBOSE) print*, 'l5expr stat=', stat
     end subroutine
 
@@ -448,7 +421,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule2(l5expr, (/op_plus, op_minus/), p_l5expr, this, stat, (/op_noop, func_neg/))
+        call meta_rule2(this, l5expr, (/op_plus, op_minus/), stat, (/op_noop, func_neg/))
         if (DEBUG_VERBOSE) print*, 'np_l5expr stat=', stat
     end subroutine
 
@@ -459,7 +432,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule1(np_l5expr, l5expr, (/op_plus, op_minus/), p_l4expr, this, stat)
+        call meta_rule1(this, np_l5expr, l5expr, (/op_plus, op_minus/), stat)
         if (DEBUG_VERBOSE) print*, 'l4expr stat=', stat
     end subroutine
 
@@ -471,7 +444,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule1(l4expr, l4expr, (/op_le, op_lt, op_ge, op_gt, op_eq, op_ne/), p_l3expr, this, stat, 1)
+        call meta_rule1(this, l4expr, l4expr, (/op_le, op_lt, op_ge, op_gt, op_eq, op_ne/), stat, 1)
         if (DEBUG_VERBOSE) print*, 'l3expr stat=', stat
     end subroutine
 
@@ -482,7 +455,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule2(l3expr, (/op_not/), p_l2expr, this, stat)
+        call meta_rule2(this, l3expr, (/op_not/), stat)
         if (DEBUG_VERBOSE) print*, 'l2expr stat=', stat
     end subroutine
 
@@ -493,7 +466,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule1(l2expr, l2expr, (/op_and/), p_l1expr, this, stat)
+        call meta_rule1(this, l2expr, l2expr, (/op_and/), stat)
         if (DEBUG_VERBOSE) print*, 'l1expr stat=', stat
     end subroutine
 
@@ -504,7 +477,7 @@ module m_rvm
         implicit none
         type(t_parser),       intent (inout) :: this
         type(t_parse_result), intent (inout) :: stat
-        call meta_rule1(l1expr, l1expr, (/op_or/), p_l0expr, this, stat)
+        call meta_rule1(this, l1expr, l1expr, (/op_or/), stat)
         if (DEBUG_VERBOSE) print*, 'l0expr stat=', stat
     end subroutine
 
@@ -521,25 +494,19 @@ module m_rvm
         integer :: pp, i
         logical :: found
         found = .false.
-        !do pp = this%pp + this%var_len(1)-1, this%pp + this%var_len(2)-1
-            do i = 1, size(this%var_name)
-                    pp = this%pp + len_trim(this%var_name(i)) - 1
-                if (this%var_name(i) == this%expr(this%pp:pp)) then
-                    found = .true.
-                    exit
-                endif
-            enddo
-        !    if (found) exit
-        !enddo
+        do i = 1, size(this%var_name)
+            pp = this%pp + len_trim(this%var_name(i)) - 1
+            if (trim(this%var_name(i)) == this%expr(this%pp:pp)) then
+                found = .true.
+                exit
+            endif
+        enddo
         if (found) then
-            !stat%code(1:2) = (/ flag_load, i /)
-            !stat%next = pp + 1
-            !this%memo(p_term, this%pp) = stat
-            call write_stat( this, stat, p_term, pp+1, (/ flag_load, i /))
+            call write_stat( this, stat, pp+1, (/ flag_load, i /))
             this%pp = pp + 1
-            !if (DEBUG) print*, 'matched variable "', trim(this%var_name(i)), '", next pos = ', this%pp
+            if (DEBUG) print*, 'matched variable "', trim(this%var_name(i)), '", next pos = ', this%pp
         else
-            call write_stat( this, stat, p_term, this%pp, (/ flag_failed /))
+            call write_stat( this, stat, this%pp, (/ flag_failed /))
         endif
     end subroutine
 
@@ -555,9 +522,7 @@ module m_rvm
         character :: c
         integer :: pp
         logical :: deci, expo
-        !---------------- temporary  should move to compile ------------------
         real(p_k_parse) :: val
-        !---------------- temporary  should move to compile ------------------
         deci = .False.
         expo = .False.
         pp = this%pp  ! get original position
@@ -604,20 +569,20 @@ module m_rvm
                 pp = pp + 1
                 c = this%expr(pp:pp)
             enddo
-            if (DEBUG) print*, 'matched number ', this%expr(this%pp:pp-1), ', save to register', this%rp
-        !---------------- temporary  should move to compile ------------------
+            if (DEBUG) print*, 'matched number "', this%expr(this%pp:pp-1), '", save to register', this%rp
+            !---------------- mixing parsing and compiling codes ------------------
             read(this%expr(this%pp:pp-1), *) val
             this%reg_parse(this%rp) = real(val, p_k_parse)
-        !---------------- temporary  should move to compile ------------------
-            call write_stat( this, stat, p_term, pp, (/ flag_load, this%rp, this%pp /))
+            !---------------- mixing parsing and compiling codes ------------------
+            call write_stat( this, stat, pp, (/ flag_load, this%rp, this%pp /))
             this%pp = pp  ! update current pos
         else  ! not a number
-            call write_stat( this, stat, p_term, this%pp, (/ flag_failed /))
+            call write_stat( this, stat, this%pp, (/ flag_failed /))
         endif
     end subroutine
 
 !----------------------------------------------------------------------------------------------------------
-! term    = func / bracket / var / constant / num
+! term    =  func / num / bracket / var / constant
 !----------------------------------------------------------------------------------------------------------
     recursive subroutine term( this, stat )
         implicit none
@@ -631,23 +596,17 @@ module m_rvm
         endif
 
         ! check out term one by one
-        !if (this%memo(p_term, this%pp)%code(1) == flag_noparse) then
+        call func(this, stat)
 
-            call func(this, stat)
+        if (stat%code(1) == flag_failed) call number(this, stat)
 
-            if (stat%code(1) == flag_failed) call bracket(this, stat)
+        if (stat%code(1) == flag_failed) call bracket(this, stat)
 
-            if (stat%code(1) == flag_failed) call variable(this, stat)
+        if (stat%code(1) == flag_failed) call variable(this, stat)
 
-            if (stat%code(1) == flag_failed) call constant(this, stat)
+        if (stat%code(1) == flag_failed) call constant(this, stat)
 
-            if (stat%code(1) == flag_failed) call number(this, stat)
-
-        !else
-        !    stat = this%memo(p_term, this%pp)
-        !    if (DEBUG) print*, 'fetching term', this%expr(this%pp:stat%next-1)
-        !    this%pp = stat%next
-        !endif
+        if (stat%code(1) == flag_failed) call handle_error(this, stat%code, (/err_noterm, this%pp/))
     end subroutine
 
 
@@ -702,11 +661,11 @@ module m_rvm
 
                 ! matched, record instructions
                 this%pp = this%pp + 1  ! consume ')'
-                call write_stat( this, stat, p_term, this%pp, (/ functions(j)%id, this%rp, mo(1:np) /))
-                if (DEBUG) print*, 'matched function ', this%expr(pp:this%pp), 'instruction = ', stat%code(1:np+2) 
+                call write_stat( this, stat, this%pp, (/ functions(j)%id, this%rp, mo(1:np) /))
+                if (DEBUG) print*, 'matched function "', this%expr(pp:this%pp-1), '" instruction = ', stat%code(1:np+2) 
             endif
         else
-            call write_stat( this, stat, p_term, this%pp, (/ flag_failed /))
+            call write_stat( this, stat, this%pp, (/ flag_failed /))
         endif
     end subroutine
 
@@ -722,7 +681,7 @@ module m_rvm
         integer :: pp
         pp = this%pp
         if (this%expr(pp:pp) /= '(') then
-            call write_stat( this, stat, p_term, pp, (/ flag_failed /))
+            call write_stat( this, stat, pp, (/ flag_failed /))
             return
         endif
 
@@ -732,9 +691,9 @@ module m_rvm
 
         if (this%expr(this%pp:this%pp) /= ')') call handle_error(this, stat%code, (/err_brt_mtch, this%pp/))
 
-        call write_stat( this, stat, p_term, this%pp, (/ op_noop%id, stat%code(2) /) )
+        call write_stat( this, stat, this%pp, (/ op_noop%id, stat%code(2) /) )
 
-        if (DEBUG_VERBOSE) print*, 'matched parentheses ', this%expr(pp:this%pp)
+        if (DEBUG_VERBOSE) print*, 'matched parentheses "', this%expr(pp:this%pp), '"'
 
         this%pp = this%pp + 1  ! consume ')'
 
@@ -753,15 +712,15 @@ module m_rvm
         do i = 1, NUM_CONSTANT
             if ( trim(constants(i)%name) == this%expr( this%pp: this%pp + len_trim( constants(i)%name )-1 ) ) then
                 this%pp = this%pp + len_trim(constants(i)%name) ! consume constant
-                call write_stat( this, stat, p_term, this%pp, (/ flag_load, i + this%nvar /))
-                if (DEBUG) print*, 'matched constant ', this%expr(this%pp - len_trim(constants(i)%name): this%pp-1)
+                call write_stat( this, stat, this%pp, (/ flag_load, i + this%nvar /))
+                if (DEBUG) print*, 'matched constant "', this%expr(this%pp - len_trim(constants(i)%name): this%pp-1), '"'
                 exit
             endif
         enddo
     end subroutine
 
 !----------------------------------------------------------------------------------------------------------
-! setup the parser, parse input, compile and optimize
+! setup the parser, parse input, compile and (TODO: optimize)
 !----------------------------------------------------------------------------------------------------------
     subroutine setup_parser(this, str_expr, varname, ierr)
         implicit none
@@ -777,22 +736,16 @@ module m_rvm
         call pre_processing(str_expr, this%expr, this%slen)
         this%nvar = size(varname)
 
-        maxl = 0
         allocate( this%var_name( this%nvar ) )
         do i = 1, this%nvar
             this%var_name(i) = varname(i)
-            if (len_trim(varname(i)) > maxl)then
-                maxl = len_trim(varname(i))
-            endif
-            if (len_trim(varname(i)) < minl)then
-                minl = len_trim(varname(i))
-            endif
         enddo
-        this%var_len(1:2) = (/ minl, maxl /)
         this%rp = 1 + NUM_CONSTANT + this%nvar
+        this%pp = 1
+        this%ip = 0
 
-        allocate (this%inst_parse(ILEN, (this%slen+1)/2))
-        allocate (this%reg_parse((this%slen+1)/2 + this%rp))
+        allocate (this%inst_parse(ILEN, this%slen))
+        allocate (this%reg_parse(this%slen/2+1 + this%rp))
 
         call parse(this, stat)
         ierr = stat%code(1)
@@ -1052,15 +1005,7 @@ module m_rvm
                 this%reg(inst(2)) =  max(this%reg(inst(3)), this%reg(inst(4)))
 
             case default
-                if (this%inst(1,i) < flag_load) then
-                    print*, 'Runtime error: unknown instruction', this%inst(:,i)
-                endif
-                ! ----------------- temporary ----------------------------------------
-                ! after we compile & optimize the bytecode we would get rid of 
-                ! these load and empty instructions
-                if (this%inst(1,i) == op_noop%id) &
-                    & this%reg(this%inst(2, i)) = this%reg(this%inst(2, i-1))
-                ! ----------------- temporary ----------------------------------------
+                if (this%inst(1,i) < flag_load) call handle_error(this, inst, (/ err_runtime, 0 /))
             end select
         enddo
         eval_parser = this%reg(this%inst(2, i-1))
@@ -1100,7 +1045,6 @@ module m_rvm
         character (len=*), optional, intent(in) :: s
 
         integer :: i
-        err_out(1:2) = err_code
 
         select case (err_code(1))
             case ( err_opr )
@@ -1125,10 +1069,14 @@ module m_rvm
                 print*, 'Parser does not consume all characters'
             case ( err_noterm )
                 print*, 'No terminal term found'
+            case ( err_runtime )
+                print*, 'Runtime error: unknown instruction', err_out
+                stop
             case default
                 print*, "Parser error"
         end select
         
+        err_out(1:2) = err_code
         print*, trim(this%expr)
         write(*,*) ('-',i=1,err_code(2)-1), '^'
         print*, "error occured at position = ", err_code(2)
@@ -1137,18 +1085,29 @@ module m_rvm
 end module
 
 !program main
-!    use m_rvm
-!    type(t_parser) :: parser
-!    integer :: ierr
-!    real(p_k_parse), dimension(1) :: test
-!    real(p_k_parse) :: res
-!    test = (/2.1/)
-!    !call setup(parser, '-max3(x2,exp(3**pi),(((2+4d2**if(x1==2.0,x2^1.4,0.0)))))', (/'x1', 'x2'/), ierr)
-!    !call setup(parser, 'if(x1==2.1,x2^1.4,0.0)', (/'x1', 'x2'/), ierr)
-!    call setup(parser, '1.0', (/'x1'/), ierr)
-!    !call setup(parser, 'x2/pi', (/'x1', 'x2'/), ierr)
-!    !call setup(parser, 'x2 > x1', (/'x1', 'x2'/), ierr)  ! this should fail
-!    res = eval(parser, test)
-!    print*, res
+!    call test('1', (/'x1'/), (/2.1/))
+!    call test('+2^2.0^3.0', (/'x1'/), (/2.1/))  ! should be 2^8 = 256
+!    call test('-2 + x**y * pi', (/'x', 'y'/), (/2.0, 8./))
+!    call test('1+x1+2', (/'x1'/), (/0.9/))
+!    call test('if(x>0, max3(x, y, 10), (x-y)/10)', (/'x', 'y'/), (/1.0, 2.0/))
+!    call test('x1>0', (/'x1'/), (/0.9/)) ! this is not allowed
+!
+!    contains
+!    subroutine test( str, varname, var)
+!        use m_rvm
+!        character (len=*), intent(in) :: str
+!        character (len=*), dimension(:) :: varname
+!        real, dimension(:) :: var
+!
+!        !local
+!        type(t_parser) :: parser
+!        real(p_k_parse) :: res
+!        integer :: ierr
+!        call setup(parser, str, varname, ierr)
+!        res = eval(parser, real(var, p_k_parse))
+!        print*, res
+!        call delete(parser)
+!    end subroutine test
+!
 !end
 !
