@@ -91,7 +91,7 @@ ESMODS = $(addprefix $(OBJ_PATH), rvm.o modprofile2.o modmpinit2.o \
         modmpsort2.o modmpgard2.o  \
         modmpfft2.o  modmpfield2.o \
         modmpfieldpml2.o antenna.o\
-        diag.o  input.o )
+        diag.o  input.o upic-params.o )
 
 EMMODS = $(addprefix $(OBJ_PATH), modmpbpush2.o modmpcurd2.o )
 
@@ -216,6 +216,9 @@ $(OBJ_PATH)antenna.o : $(SRC_PATH_F90)antenna.f90
 	
 $(OBJ_PATH)input.o : $(SRC_PATH_F90)input.f90
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)input.o -c $(SRC_PATH_F90)input.f90
+
+$(OBJ_PATH)upic-params.o : $(SRC_PATH_F90)upic-params.f90
+	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-params.o -c $(SRC_PATH_F90)upic-params.f90
 
 $(OBJ_PATH)upic-emma.o : $(SRC_PATH_F90)upic-emma.f90 $(ESMODS) $(EMMODS) $(OBJ_PATH)mppmod2.o $(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-emma.o -c $(SRC_PATH_F90)upic-emma.f90
