@@ -30,7 +30,12 @@
       use diag
       use antenna
       use input
+! HDF5/OpenPMD modules
+      use parallel_class
+      use hdf5io_class
+! 
       use mpi
+
       
       implicit none
 ! npx/npy = number of macro electrons distributed in x/y direction.
@@ -266,6 +271,14 @@
       real :: tdiag = 0.0
 ! volume = volume of a spatial cell in (Delta^3)
       real :: volume
+! HDF5 output
+! sfield => 2d array for HDF5 dump
+      real*4 :: sfield(:,:)
+! p, pp => parallel configuration needed for HDF5 dumps
+      type(parallel), target :: p
+      class(parallel), pointer :: pp => null()
+! HDF5
+      
 !
 ! start timing initialization
       call dtimer(dtime,itime,-1)
@@ -430,6 +443,7 @@
       allocate(cut(ndim,nye,kxp),bxyt(ndim,nye,kxp))
       allocate(ffc(nyh,kxp),mixup(nxhy),sct(nxyh))
       allocate(kpic(mxyp1),kpici(mxyp1))
+      allocate(sfield(nx,nyp))
       if (laserpulse) then
 	      allocate(exyzl(ndim,nye,kxp),bxyzl(ndim,nye,kxp))
       	  exyzl = 0.
@@ -470,6 +484,10 @@
            			 N_kinetic_energy, N_ele_kinetic_energy, N_ion_kinetic_energy,&
            			 N_el_fields_pml, N_ma_fields_pml, N_fields_src,&
            			 N_fields_esc, N_el_dumped, N_ma_dumped)
+! Initialize Diagnostics for HDF5/OpenPMD
+      call p%new()
+      pp => p
+! OpenPMD
 !	
 ! Variables needed to unpack array containing Fourier quantities ( M. Touati )
       modesx = nx/4; modesy = ny/4
@@ -834,9 +852,21 @@
 	  call wmpncguard2(pixyze,nyp,tguard,nx,kstrt,nvp)
 ! Diagnostic of electromagnetic fields in real space ( M Touati )
       if (store_cond) then
-        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
-                             nxe, nypmx, nyp, nx,&
-                             de, phtime, yp, x, fxyze, bxyze, tdiag)
+!        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
+!                             nxe, nypmx, nyp, nx,&
+         !                             de, phtime, yp, x, fxyze, bxyze, tdiag)
+         do ix=1,nyp
+             do iy=1,nx
+                 sfield(ix,iy) = fxyze(1,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime,axislabels = (/'x','y'/), &
+              &gridSpacing=delta, &
+              &GridGlobalOffset=(/ 0.0, 0.0 /),&
+              &basePath='MS',&
+              &meshesPath='FLD',&
+              &records='E1')
+         call pwfield(pp,file,sfield
         call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)
