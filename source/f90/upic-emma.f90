@@ -44,7 +44,7 @@
       integer         :: npx
       integer         :: npy
 ! Cells dimensions in x/y directions in spatial unit choosen by the user ( M Touati)
-      real, dimension(1:2) :: delta
+      real, dimension(2) :: delta
 ! ndim = number of velocity coordinates = 3
       integer, parameter :: ndim = 3
 ! tend = time at end of simulation, in units of plasma frequency.
@@ -273,10 +273,12 @@
       real :: volume
 ! HDF5 output
 ! sfield => 2d array for HDF5 dump
-      real*4 :: sfield(:,:)
+      real, allocatable  :: sfield(:,:)
 ! p, pp => parallel configuration needed for HDF5 dumps
       type(parallel), target :: p
       class(parallel), pointer :: pp => null()
+      type(hdf5file) :: file
+      integer ix,iy 
 ! HDF5
       
 !
@@ -854,43 +856,40 @@
       if (store_cond) then
 !        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
 !                             nxe, nypmx, nyp, nx,&
-         !                             de, phtime, yp, x, fxyze, bxyze, tdiag)
+!                             de, phtime, yp, x, fxyze, bxyze, tdiag)
          do ix=1,nyp
              do iy=1,nx
                  sfield(ix,iy) = fxyze(1,ix,iy)
               end do
          end do
-         call file%new(iter=ntime,axislabels = (/'x','y'/), &
-              &gridSpacing=delta, &
-              &GridGlobalOffset=(/ 0.0, 0.0 /),&
-              &basePath='MS',&
-              &meshesPath='FLD',&
-              &records='E1')
-         call pwfield(pp,file,sfield,/nx,ny/,/nx,nyp/,/0,noff/,ierr)
-                  do ix=1,nyp
-         do iy=1,nx
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = delta, meshesPath='FLD', records='E1')
+!        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
+!    & basePath='MS', meshesPath='FLD', records='E1')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nyp
+             do iy=1,nx
                  sfield(ix,iy) = fxyze(2,ix,iy)
               end do
          end do
-         call file%new(iter=ntime,axislabels = (/'x','y'/), &
-              &gridSpacing=delta, &
-              &GridGlobalOffset=(/ 0.0, 0.0 /),&
-              &basePath='MS',&
-              &meshesPath='FLD',&
-              &records='E2')
-         call pwfield(pp,file,sfield,/nx,ny/,/nx,nyp/,/0,noff/,ierr)
-                  do ix=1,nyp
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = delta, meshesPath='FLD', records='E2')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='E2')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nyp
              do iy=1,nx
                  sfield(ix,iy) = fxyze(3,ix,iy)
               end do
          end do
-         call file%new(iter=ntime,axislabels = (/'x','y'/), &
-              &gridSpacing=delta, &
-              &GridGlobalOffset=(/ 0.0, 0.0 /),&
-              &basePath='MS',&
-              &meshesPath='FLD',&
-              &records='E3')
-         call pwfield(pp,file,sfield,/nx,ny/,/nx,nyp/,/0,noff/,ierr)
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = delta, meshesPath='FLD', records='E3')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='E3')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
         call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)
