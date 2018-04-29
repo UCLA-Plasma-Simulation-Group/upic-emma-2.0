@@ -866,7 +866,31 @@
               &basePath='MS',&
               &meshesPath='FLD',&
               &records='E1')
-         call pwfield(pp,file,sfield
+         call pwfield(pp,file,sfield,/nx,ny/,/nx,nyp/,/0,noff/,ierr)
+                  do ix=1,nyp
+         do iy=1,nx
+                 sfield(ix,iy) = fxyze(2,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime,axislabels = (/'x','y'/), &
+              &gridSpacing=delta, &
+              &GridGlobalOffset=(/ 0.0, 0.0 /),&
+              &basePath='MS',&
+              &meshesPath='FLD',&
+              &records='E2')
+         call pwfield(pp,file,sfield,/nx,ny/,/nx,nyp/,/0,noff/,ierr)
+                  do ix=1,nyp
+             do iy=1,nx
+                 sfield(ix,iy) = fxyze(3,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime,axislabels = (/'x','y'/), &
+              &gridSpacing=delta, &
+              &GridGlobalOffset=(/ 0.0, 0.0 /),&
+              &basePath='MS',&
+              &meshesPath='FLD',&
+              &records='E3')
+         call pwfield(pp,file,sfield,/nx,ny/,/nx,nyp/,/0,noff/,ierr)
         call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)
