@@ -84,7 +84,7 @@
 #                                                                     #
 #######################################################################
 #
-#N_threads  0
+#N_threads  2
 #
 #FTFD 0
 #
@@ -94,9 +94,9 @@
 #
 #moving_ions .false.
 #
-#laserpulse  .false.
+#laserpulse  .true.
 #
-#plasma .true.
+#plasma .false.
 #
 #Delta_x 1.
 #
@@ -106,9 +106,9 @@
 #
 #indy 7
 #
-#t_end  30.
+#t_end  128.
 #
-#units ES
+#units EM
 #
 #######################################################################
 #             Plasma properties (useful only if plasma = 1) :         #
@@ -148,15 +148,17 @@
 #
 #ionization_state 3.
 #
+##ax  0.
 #ax .912871
 #
+##ay  0.
 #ay .912871
 #
 #den_me  1.
 #
-#Npic    16
+#Npic    1.
 #
-#param  0.1
+#param 1.
 #
 #ptx    1.
 #
@@ -296,10 +298,9 @@
 # density_x/y, write down expressions for density along x/y           #
 #              directions. The names of coordinate of x is x1         #
 #              and y is x2. many math functions and branching         #
-#              function are supported. See parser.f90 for more        #
-#              details.                                               #
+#              function are supported.                                #
 #                                                                     #
 #######################################################################
 #
-#density_x x1
+#density_x 1.0
 #density_y 1.0

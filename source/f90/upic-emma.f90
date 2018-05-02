@@ -30,7 +30,12 @@
       use diag
       use antenna
       use input
+! HDF5/OpenPMD modules
+      use parallel_class
+      use hdf5io_class
+! 
       use mpi
+
       
       implicit none
 ! npx/npy = number of macro electrons distributed in x/y direction.
@@ -39,7 +44,7 @@
       integer         :: npx
       integer         :: npy
 ! Cells dimensions in x/y directions in spatial unit choosen by the user ( M Touati)
-      real, dimension(1:2) :: delta
+      real, dimension(2) :: delta
 ! ndim = number of velocity coordinates = 3
       integer, parameter :: ndim = 3
 ! tend = time at end of simulation, in units of plasma frequency.
@@ -266,6 +271,16 @@
       real :: tdiag = 0.0
 ! volume = volume of a spatial cell in (Delta^3)
       real :: volume
+! HDF5 output
+! sfield => 2d array for HDF5 dump
+      real, allocatable  :: sfield(:,:)
+! p, pp => parallel configuration needed for HDF5 dumps
+      type(parallel), target :: p
+      class(parallel), pointer :: pp => null()
+      type(hdf5file) :: file
+      integer ix,iy 
+! HDF5
+      
 !
 ! start timing initialization
       call dtimer(dtime,itime,-1)
@@ -430,6 +445,7 @@
       allocate(cut(ndim,nye,kxp),bxyt(ndim,nye,kxp))
       allocate(ffc(nyh,kxp),mixup(nxhy),sct(nxyh))
       allocate(kpic(mxyp1),kpici(mxyp1))
+      allocate(sfield(nx,nyp))
       if (laserpulse) then
 	      allocate(exyzl(ndim,nye,kxp),bxyzl(ndim,nye,kxp))
       	  exyzl = 0.
@@ -470,6 +486,10 @@
            			 N_kinetic_energy, N_ele_kinetic_energy, N_ion_kinetic_energy,&
            			 N_el_fields_pml, N_ma_fields_pml, N_fields_src,&
            			 N_fields_esc, N_el_dumped, N_ma_dumped)
+! Initialize Diagnostics for HDF5/OpenPMD
+      call p%new()
+      pp => p
+! OpenPMD
 !	
 ! Variables needed to unpack array containing Fourier quantities ( M. Touati )
       modesx = nx/4; modesy = ny/4
@@ -765,31 +785,31 @@
 ! updates fxyt, we
       call mppois2(qt,fxyt,ffc,we,tfield,nx,ny,kstrt,kx,ky)
 !
-! Add laser pulse fields in real space IN CONSTRUCTION...
-! 	  if ((phtime >= tlaunch) .and. laserpulse) then
-! 	   !  isign = 1
-! !         call wmpfft2rn(fxyze,exyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
-! !                     &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
-! !         call wmpfft2rn(bxyze,bxyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
-! !                      &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
-! 	  	call LaunchLaser(fxyze,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
-! 	                     FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
-! 	  	! copy guard cells with OpenMP: updates fxyze, bxyze
-!       	call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
-!       	call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
-! 	  	! transform E-M fields to Fourier space with OpenMP:
-! 	  	isign = -1
-!       	call wmpfft2rn(fxyze,exyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
-!      	    &indy,kstrt,nvp,kyp,ny,nterf,ierr)
-!      	call wmpfft2rn(bxyze,bxyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
-!      	    &indy,kstrt,nvp,kyp,ny,nterf,ierr)
-!      	! Filter laser fields and add it to the electromagnetic fields with OpenMP:
-! 	    isign = 1
-!       	call mpemfield2(exyz,exyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-!       	call mpemfield2(bxyz,bxyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-! ! 	  	exyz = exyz + exyzl
-! ! 	  	bxyz = bxyz + bxyzl
-! 	  end if
+! Add laser pulse fields in real space
+	  if ((phtime >= tlaunch) .and. laserpulse) then
+	   !  isign = 1
+!         call wmpfft2rn(fxyze,exyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
+!                     &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
+!         call wmpfft2rn(bxyze,bxyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
+!                      &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
+	  	call LaunchLaser(fxyze,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
+	                     FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
+	  	! copy guard cells with OpenMP: updates fxyze, bxyze
+      	call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
+      	call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
+	  	! transform E-M fields to Fourier space with OpenMP:
+	  	isign = -1
+      	call wmpfft2rn(fxyze,exyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+     	    &indy,kstrt,nvp,kyp,ny,nterf,ierr)
+     	call wmpfft2rn(bxyze,bxyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+     	    &indy,kstrt,nvp,kyp,ny,nterf,ierr)
+     	! Filter laser fields and add it to the electromagnetic fields with OpenMP:
+	    isign = 1
+      	call mpemfield2(exyz,exyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+      	call mpemfield2(bxyz,bxyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+! 	  	exyz = exyz + exyzl
+! 	  	bxyz = bxyz + bxyzl
+	  end if
 !
 ! add longitudinal and transverse electric fields with OpenMP:
 ! updates fxyt
@@ -834,9 +854,42 @@
 	  call wmpncguard2(pixyze,nyp,tguard,nx,kstrt,nvp)
 ! Diagnostic of electromagnetic fields in real space ( M Touati )
       if (store_cond) then
-        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
-                             nxe, nypmx, nyp, nx,&
-                             de, phtime, yp, x, fxyze, bxyze, tdiag)
+!        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
+!                             nxe, nypmx, nyp, nx,&
+!                             de, phtime, yp, x, fxyze, bxyze, tdiag)
+         do ix=1,nyp
+             do iy=1,nx
+                 sfield(ix,iy) = fxyze(1,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = delta , records='E1',filenamebase='E1',filepath='./MS/E1/')
+!        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
+!    & basePath='MS', meshesPath='FLD', records='E1')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nyp
+             do iy=1,nx
+                 sfield(ix,iy) = fxyze(2,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = delta, records='E2',filenamebase='E2',filepath='./MS/E2/')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='E2')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nyp
+             do iy=1,nx
+                 sfield(ix,iy) = fxyze(3,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = delta, records='E3',filenamebase='E3',filepath='./MS/E3/')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='E3')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
         call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)

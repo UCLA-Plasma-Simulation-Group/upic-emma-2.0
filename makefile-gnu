@@ -14,7 +14,7 @@
 MPIFC = mpif90 -fopenmp
 MPICC = mpicc -fopenmp
 
-CC = gcc
+CC = mpicc
 
 #OPTSF90 = -O3
 OPTSF90 = -O3 -fdefault-real-8 -fdefault-double-8
@@ -68,6 +68,10 @@ MOD_PATH =
 
 TRG_PATH = 
 
+# OPENPMD_PATH = /Users/uclapic/Documents/code-development/Fortran-OpenPMD-File-Writers/
+OPENPMD_PATH = /Users/franktsung/vst-extra/FranksFolder/Work/codes/Fortran-OpenPMD-File-Writers
+HDF_LIBPATH = -L/usr/local/lib -lhdf5_fortran -lhdf5_hl -lhdf5 -lz
+
 #############
 # shortcuts #
 #############
@@ -95,6 +99,8 @@ ESMODS = $(addprefix $(OBJ_PATH), rvm.o modprofile2.o modmpinit2.o \
 
 EMMODS = $(addprefix $(OBJ_PATH), modmpbpush2.o modmpcurd2.o )
 
+OPENPMD_MODS = $(OPENPMD_PATH)/parallel_class.o $(OPENPMD_PATH)/hdf5io_class.o
+
 #####################
 # Compilation rules #
 #####################
@@ -102,11 +108,11 @@ EMMODS = $(addprefix $(OBJ_PATH), modmpbpush2.o modmpcurd2.o )
 all : upic-emma clean_mod clean_obj
 
 upic-emma : $(OBJ_PATH)upic-emma.o $(ESOBJS) $(EMOBJS) dtimer.o 
-	$(MPIFC) $(OPTSF90) -o $(TRG_PATH)upic-emma $(OBJ_PATH)upic-emma.o \
+	$(MPIFC) $(HDF_LIBPATH) $(OPTSF90) -o $(TRG_PATH)upic-emma $(OBJ_PATH)upic-emma.o \
 	$(ESOBJS) $(EMOBJS) $(ESMODS) $(EMMODS) \
 	$(OBJ_PATH)mpplib2.o $(OBJ_PATH)mppmod2.o \
 	$(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o \
-	$(ESHOBJS) $(EMHOBJS) dtimer.o
+	$(ESHOBJS) $(EMHOBJS) $(OPENPMD_MODS) dtimer.o 
 
 dtimer.o : $(SRC_PATH_C)dtimer.c
 	$(CC) $(OPTSCC) -c $(SRC_PATH_C)dtimer.c
@@ -220,8 +226,8 @@ $(OBJ_PATH)input.o : $(SRC_PATH_F90)input.f90
 $(OBJ_PATH)upic-params.o : $(SRC_PATH_F90)upic-params.f90
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-params.o -c $(SRC_PATH_F90)upic-params.f90
 
-$(OBJ_PATH)upic-emma.o : $(SRC_PATH_F90)upic-emma.f90 $(ESMODS) $(EMMODS) $(OBJ_PATH)mppmod2.o $(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o
-	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-emma.o -c $(SRC_PATH_F90)upic-emma.f90
+$(OBJ_PATH)upic-emma.o : $(SRC_PATH_F90)upic-emma.f90 $(ESMODS) $(EMMODS) $(OBJ_PATH)mppmod2.o $(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o $(OPENPMD_PATH)/parallel_class.o $(OPENPMD_PATH)/hdf5io_class.o
+	$(MPIFC) $(OPTSF90) -I$(OPENPMD_PATH) -o $(OBJ_PATH)upic-emma.o -c $(SRC_PATH_F90)upic-emma.f90
 
 extract : $(SRC_PATH_PY)extract.py
 	python $(SRC_PATH_PY)extract.py
