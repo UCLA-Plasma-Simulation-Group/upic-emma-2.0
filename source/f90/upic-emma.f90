@@ -863,7 +863,7 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = delta, meshesPath='FLD', records='E1')
+     &   gridSpacing = delta , records='E1',filenamebase='E1',filepath='./MS/E1/')
 !        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
 !    & basePath='MS', meshesPath='FLD', records='E1')
@@ -874,7 +874,7 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = delta, meshesPath='FLD', records='E2')
+     &   gridSpacing = delta, records='E2',filenamebase='E2',filepath='./MS/E2/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E2')
@@ -885,7 +885,7 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = delta, meshesPath='FLD', records='E3')
+     &   gridSpacing = delta, records='E3',filenamebase='E3',filepath='./MS/E3/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E3')

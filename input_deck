@@ -290,3 +290,17 @@
 #######################################################################
 #
 #Delta_t_diag 1.
+#
+#######################################################################
+#                        density profile :                            #
+#######################################################################
+#                                                                     #
+# density_x/y, write down expressions for density along x/y           #
+#              directions. The names of coordinate of x is x1         #
+#              and y is x2. many math functions and branching         #
+#              function are supported.                                #
+#                                                                     #
+#######################################################################
+#
+#density_x 1.0
+#density_y 1.0
