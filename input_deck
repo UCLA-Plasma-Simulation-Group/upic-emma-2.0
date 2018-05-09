@@ -84,7 +84,7 @@
 #                                                                     #
 #######################################################################
 #
-#N_threads  2
+#N_threads  0
 #
 #FTFD 0
 #
@@ -98,15 +98,15 @@
 #
 #plasma .false.
 #
-#Delta_x 1.
+#Delta_x 1.0
 #
 #Delta_y 1.
 #
-#indx 7
+#indx 9
 #
 #indy 7
 #
-#t_end  128.
+#t_end  50.
 #
 #units EM
 #
@@ -154,7 +154,7 @@
 ##ay  0.
 #ay .912871
 #
-#den_me  1.
+#den_me  0.01
 #
 #Npic    1.
 #
@@ -275,7 +275,7 @@
 #
 #PML_scheme 0
 #
-#L_PML 30.
+#L_PML 10.
 #
 #n_cond_PML 3.5
 #
@@ -290,3 +290,16 @@
 #######################################################################
 #
 #Delta_t_diag 1.
+#######################################################################
+#                        density profile :                            #
+#######################################################################
+#                                                                     #
+# density_x/y, write down expressions for density along x/y           #
+#              directions. The names of coordinate of x is x1         #
+#              and y is x2. many math functions and branching         #
+#              function are supported.                                #
+#                                                                     #
+#######################################################################
+#
+#density_x 0.00001
+#density_y 0.00001
