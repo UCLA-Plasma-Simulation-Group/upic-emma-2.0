@@ -2,3 +2,5 @@
 upic-emma
 *.h5
 *.dat
+*.o
+*.mod
