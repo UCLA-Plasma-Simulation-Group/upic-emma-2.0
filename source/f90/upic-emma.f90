@@ -704,6 +704,32 @@
       	end if
 	  end if
 !
+! test case : generate a 2D-cylidrical EM wave generated from x1,y1 < x,y < x2,y2
+        cutot = 0.
+      qtot  = 0.
+      ! centered case :
+      x1 = 63.
+      x2 = 65.
+      y1 = 63.
+      y2 = 65.
+      cu0    = -1.e1
+      v0     = 1.e-3 / ci
+      n0     = - cu0/v0 
+      do ii=1,nxe
+            do jj=1,nypmx
+                  if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
+                  if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
+                        cutot(3,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
+                        wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
+                  end if
+                  end if
+            end do
+      end do
+
+
+
+
+!
 ! transform charge to fourier space with OpenMP:
 ! updates qt, nterf, and ierr, modifies qtot
       isign = -1
