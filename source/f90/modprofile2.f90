@@ -18,14 +18,14 @@ subroutine getdensity1d(expr, varname, edges, dx, nx, npx, sr, x)
     integer :: part_nx, gppe
     double precision, parameter :: epslon = 1D-14
     double precision, dimension(:), allocatable :: pcharge
-    double precision :: qlow, den_ltot, pvol, qx, dxp_2
+    double precision :: qlow, den_ltot, pvol, qx, dxp
 
     type(t_parser) :: dens
 
     call setup(dens, expr, (/varname/), ierr)
 
     ! get half distance between sampling grid points
-    dxp_2 = 0.5/sr
+    dxp = 1.0/sr
     !enddo
 
     ! find total number sampling grid points per cell
@@ -40,7 +40,7 @@ subroutine getdensity1d(expr, varname, edges, dx, nx, npx, sr, x)
     ! evaluate the density expression
     do i = 1, gppe
         ! overwrite in one direction
-        pcharge(i) = eval(dens, (/ edges + (2 * i - 2) * dxp_2 * dx /))
+        pcharge(i) = eval(dens, (/ edges + (i - 1) * dxp * dx /))
     enddo
     ! numerically integrate the density expression
     den_ltot = 0
@@ -54,8 +54,11 @@ subroutine getdensity1d(expr, varname, edges, dx, nx, npx, sr, x)
     i = 1
     do while (.true.)
         if (qlow < qx) then
-            qlow = qlow + 0.5 * (pcharge(i) + pcharge(i+1))
-            if ( i > gppe) exit
+            if ( i <= gppe ) then
+                qlow = qlow + 0.5 * (pcharge(i) + pcharge(i+1))
+            else
+                exit
+            endif
             i = i + 1
         else
             part_nx = part_nx + 1
@@ -63,9 +66,9 @@ subroutine getdensity1d(expr, varname, edges, dx, nx, npx, sr, x)
             ! here pvol is used as tmp storing the density gradient.
             pvol = pcharge(i)-pcharge(i-1) 
             if (pvol <= epslon) then  ! piece-wise constant
-                x(part_nx) = dxp_2 * 2.0 * (i - qlow/pcharge(i) - 1)
+                x(part_nx) = dxp * dx * (i - qlow/pcharge(i) - 1)
             else  ! assuming linear gradient within this piece
-                x(part_nx) = dxp_2 * 2.0 * (i - (sqrt(pcharge(i)**2 + &
+                x(part_nx) = dxp * dx * (i - (sqrt(pcharge(i)**2 + &
                         & 2*qlow*pvol) - pcharge(i))/pvol - 1)
             endif
         endif

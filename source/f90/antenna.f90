@@ -28,7 +28,7 @@ module antenna
 		!if (ifant == 0) then
 			if (shape == 0) then 
 ! plane antenna
-				call LaunchPlaneAntenna(fxyze,bxyze,wl,x,yp,affp,delta,polardir,tlaunch,&
+				call LaunchPlaneAntenna_fst(fxyze,bxyze,wl,x,yp,affp,delta,polardir,tlaunch,&
 				                        FWHMt,omega0,a0,ci,dt,phtime,L_PML,&
 				                        ntime,propdir,BCx,BCy,nx,nyp,nxe,nypmx,laserpulse)
 			else 
@@ -163,6 +163,89 @@ module antenna
 			wl = 0.
 		endif
 	end subroutine LaunchPlaneAntenna
+
+
+	subroutine LaunchPlaneAntenna_fst(fxyze,bxyze,wl,x,yp,affp,delta,polardir,tlaunch,&
+				                  FWHMt,omega0,a0,ci,dt,phtime,L_PML,&
+				                  ntime,propdir,BCx,BCy,nx,nyp,nxe,nypmx,laserpulse)
+		implicit none
+		integer,intent(in)                          :: BCx, BCy, nx, nyp, nxe, nypmx
+		integer, intent(in)                         :: ntime, propdir
+		real, intent(in)                            :: polardir
+		real, intent(in)                            :: tlaunch, FWHMt
+		real, intent(in)                            :: omega0, a0
+		real, intent(in)                            :: affp, ci, dt, phtime, L_PML
+		real, dimension(nxe), intent(in)            :: x
+		real, dimension(nypmx), intent(in)          :: yp
+		real, dimension(2), intent(in)              :: delta
+		real, dimension(3,nxe,nypmx), intent(inout) :: fxyze, bxyze
+		real, intent(inout)                         :: wl
+		logical, intent(inout)                      :: laserpulse
+! locals
+		integer  :: ii, jj, dim, dim1, dim2, dim3, Npt
+		logical  :: antenna
+		real     :: a, pi, Ft, xi, x0, x1, x2, omega, k, phi0, phi, k0, alpha, beta, anorm, fl1, bl1, fl2, bl2
+		integer  :: ix, iy
+		real     :: phase, cos_phase,sin_phase
+!
+	    k0 = omega0 * ci
+	    omega = sin(omega0*dt)/dt
+		k = omega * ci
+		pi = 3.14159265359
+		anorm = 0.5 *delta(1) * delta(2) / affp
+		
+		alpha = sqrt(     abs(polardir) )
+		beta  = sqrt(1. - abs(polardir) )
+        phase = omega0*(phtime-tlaunch)
+        cos_phase = cos(phase)
+        sin_phase = sin(phase)
+		if (propdir == 1) then
+			if (BCx == 0) then
+				ix = L_PML/delta(1)+3
+				
+			else
+                ix = 2
+			end if
+			dim1 = 2
+			dim2 = 3
+			dim3 = 1
+		    do jj = 1,nyp
+		    	fxyze(dim1,ix,jj) =    fxyze(dim1,ix,jj) + a0 * omega0 * omega0 * alpha * cos_phase
+			fxyze(dim2,ix,jj) =    fxyze(dim2,ix,jj) + a0 * omega0 * omega0 * beta  * cos_phase 
+			! fxyze(dim3,ii,jj) =   0.
+		    end do
+		else if (propdir == 2) then
+			if (BCy == 0) then
+				
+				iy=L_PML/delta(2)+1
+! 				x2 = real(nx)*delta(1)
+			else
+				iy = 2
+			     
+			end if
+			dim1 = 3
+			dim2 = 1
+			dim3 = 2
+			do ii=1,nx
+			    fxyze(dim1,ii,iy) =    a0 * omega0 * alpha * sin(phi) 
+				fxyze(dim2,ii,iy) =    a0 * omega0 * beta  * sin(phi)
+			end do
+		end if
+
+		do jj = 1,nyp,1
+			do dim=1,3,1
+				fxyze(dim,nx+1,jj) = fxyze(dim,1,jj)
+				bxyze(dim,nx+1,jj) = bxyze(dim,1,jj)
+				fxyze(dim,nx+2,jj) = fxyze(dim,1,jj)
+				bxyze(dim,nx+2,jj) = bxyze(dim,1,jj)
+			end do
+		end do
+
+		if (phtime >= (tlaunch + 2.*FWHMt)) then
+			laserpulse = .false.
+			wl = 0.
+		endif
+	end subroutine LaunchPlaneAntenna_fst
 !
 ! 	subroutine LaunchGaussianAntenna(fxyze,bxyze,lasxstart,lasxend,lask,lase0, &
 ! 	                                &inorder,ci,laspol,ntime,dt,launchlas,rayl,&

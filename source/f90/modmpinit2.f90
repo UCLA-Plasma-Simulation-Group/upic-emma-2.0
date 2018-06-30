@@ -185,8 +185,8 @@
       	endif
 		mu = (ci*vtx)**(-2.)
         allocate(xp(npx), yp(npy))
-        call getdensity1d(densx, 'x1', edgelx, at1, nx, npx, 32, xp)
-        call getdensity1d(densy, 'x2', edgely, at2, ny, npy, 32, yp)
+        call getdensity1d(densx, 'x1', edgelx, x(2)-x(1), nx, npx, 32, xp)
+        call getdensity1d(densy, 'x2', edgely, y(2)-y(1), ny, npy, 32, yp)
 		if (Bessel_Kn(2,mu)==0.) then
 ! uniform density profile
       		do k = 1, npy

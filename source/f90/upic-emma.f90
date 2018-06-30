@@ -271,6 +271,11 @@
       real :: tdiag = 0.0
 ! volume = volume of a spatial cell in (Delta^3)
       real :: volume
+
+! test case variables
+      integer :: ii, jj
+      real    :: x1, x2, y1, y2, cu0, n0, v0
+
 ! HDF5 output
 ! sfield => 2d array for HDF5 dump
       real*4, allocatable  :: sfield(:,:)
@@ -704,6 +709,54 @@
       	end if
 	  end if
 !
+! test case : generate a 2D-cylidrical EM wave generated from x1,y1 < x,y < x2,y2
+        cutot = 0.
+      qtot  = 0.
+      ! centered case :
+      x1 = 63.
+      x2 = 65.
+      y1 = 63.
+      y2 = 65.
+      cu0    = -1.e1
+      v0     = 1.e-3 / ci
+      n0     = - cu0/v0 
+      do ii=1,nxe
+            do jj=1,nypmx
+                  if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
+                  if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
+                        cutot(2,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
+                        wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
+                  end if
+                  end if
+            end do
+      end do
+
+! Add laser pulse fields in real space
+        if ((phtime >= tlaunch) .and. laserpulse) then
+         !  isign = 1
+
+            call LaunchLaser(cutot,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
+                           FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
+            ! copy guard cells with OpenMP: updates fxyze, bxyze
+    !       call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
+    !       call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
+            ! ! transform E-M fields to Fourier space with OpenMP:
+            ! isign = -1
+    !       call wmpfft2rn(fxyze,exyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+    !           &indy,kstrt,nvp,kyp,ny,nterf,ierr)
+    !       call wmpfft2rn(bxyze,bxyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+    !           &indy,kstrt,nvp,kyp,ny,nterf,ierr)
+    !       ! Filter laser fields and add it to the electromagnetic fields with OpenMP:
+         !  isign = 1
+    !       call mpemfield2(exyz,exyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+    !       call mpemfield2(bxyz,bxyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+!           exyz = exyz + exyzl
+!           bxyz = bxyz + bxyzl
+        end if
+
+
+
+!
 ! transform charge to fourier space with OpenMP:
 ! updates qt, nterf, and ierr, modifies qtot
       isign = -1
@@ -785,31 +838,7 @@
 ! updates fxyt, we
       call mppois2(qt,fxyt,ffc,we,tfield,nx,ny,kstrt,kx,ky)
 !
-! Add laser pulse fields in real space
-	  if ((phtime >= tlaunch) .and. laserpulse) then
-	   !  isign = 1
-!         call wmpfft2rn(fxyze,exyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
-!                     &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
-!         call wmpfft2rn(bxyze,bxyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
-!                      &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
-	  	call LaunchLaser(fxyze,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
-	                     FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
-	  	! copy guard cells with OpenMP: updates fxyze, bxyze
-      	call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
-      	call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
-	  	! transform E-M fields to Fourier space with OpenMP:
-	  	isign = -1
-      	call wmpfft2rn(fxyze,exyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
-     	    &indy,kstrt,nvp,kyp,ny,nterf,ierr)
-     	call wmpfft2rn(bxyze,bxyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
-     	    &indy,kstrt,nvp,kyp,ny,nterf,ierr)
-     	! Filter laser fields and add it to the electromagnetic fields with OpenMP:
-	    isign = 1
-      	call mpemfield2(exyz,exyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-      	call mpemfield2(bxyz,bxyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-! 	  	exyz = exyz + exyzl
-! 	  	bxyz = bxyz + bxyzl
-	  end if
+
 !
 ! add longitudinal and transverse electric fields with OpenMP:
 ! updates fxyt
