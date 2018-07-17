@@ -886,8 +886,8 @@
 !        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
 !                             nxe, nypmx, nyp, nx,&
 !                             de, phtime, yp, x, fxyze, bxyze, tdiag)
-         do ix=1,nyp
-             do iy=1,nx
+         do ix=1,nx
+             do iy=1,nyp
                  sfield(ix,iy) = fxyze(1,ix,iy)
               end do
          end do
@@ -901,8 +901,8 @@
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
 !    & basePath='MS',  records='E1')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
-         do ix=1,nyp
-             do iy=1,nx
+         do ix=1,nx
+             do iy=1,nyp
                  sfield(ix,iy) = fxyze(2,ix,iy)
               end do
          end do
@@ -912,8 +912,8 @@
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E2')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
-         do ix=1,nyp
-             do iy=1,nx
+         do ix=1,nx
+             do iy=1,nyp
                  sfield(ix,iy) = fxyze(3,ix,iy)
               end do
          end do
