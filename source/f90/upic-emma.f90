@@ -710,26 +710,26 @@
 	  end if
 !
 ! test case : generate a 2D-cylidrical EM wave generated from x1,y1 < x,y < x2,y2
-        cutot = 0.
-      qtot  = 0.
-      ! centered case :
-      x1 = 63.
-      x2 = 65.
-      y1 = 63.
-      y2 = 65.
-      cu0    = -1.e1
-      v0     = 1.e-3 / ci
-      n0     = - cu0/v0 
-      do ii=1,nxe
-            do jj=1,nypmx
-                  if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
-                  if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
-                        cutot(2,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
-                        wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
-                  end if
-                  end if
-            end do
-      end do
+!     cutot = 0.
+!     qtot  = 0.
+!     ! centered case :
+!     x1 = 63.
+!     x2 = 65.
+!     y1 = 63.
+!     y2 = 65.
+!     cu0    = -1.e1
+!     v0     = 1.e-3 / ci
+!     n0     = - cu0/v0 
+!     do ii=1,nxe
+!           do jj=1,nypmx
+!                 if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
+!                 if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
+!                       cutot(2,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
+!                       wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
+!                 end if
+!                 end if
+!           end do
+!     end do
 
 ! Add laser pulse fields in real space
         if ((phtime >= tlaunch) .and. laserpulse) then
@@ -886,8 +886,8 @@
 !        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
 !                             nxe, nypmx, nyp, nx,&
 !                             de, phtime, yp, x, fxyze, bxyze, tdiag)
-         do ix=1,nyp
-             do iy=1,nx
+         do ix=1,nx
+             do iy=1,nyp
                  sfield(ix,iy) = fxyze(1,ix,iy)
               end do
          end do
@@ -901,8 +901,8 @@
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
 !    & basePath='MS',  records='E1')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
-         do ix=1,nyp
-             do iy=1,nx
+         do ix=1,nx
+             do iy=1,nyp
                  sfield(ix,iy) = fxyze(2,ix,iy)
               end do
          end do
@@ -912,8 +912,8 @@
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E2')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
-         do ix=1,nyp
-             do iy=1,nx
+         do ix=1,nx
+             do iy=1,nyp
                  sfield(ix,iy) = fxyze(3,ix,iy)
               end do
          end do
