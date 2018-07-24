@@ -291,6 +291,7 @@
       call dtimer(dtime,itime,-1)
 ! read the input deck ( M Touati)
       call read_input_deck()
+      write(*,*) 'before normalization'
       relativity = 0
       if (relativistic) relativity = 1
       movion     = moving_ions
@@ -312,9 +313,9 @@
       		vty = pty
       		vtz = ptz
       		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vty = vty * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vtz = vtz * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
+      			vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       		else
       			vtx = vtx
       			vty = vty
@@ -329,9 +330,9 @@
       		vty = pty
       		vtz = ptz
       		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * param * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vty = vty * param * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vtz = vtz * param * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
+      			vtx = vtx * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vty = vty * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vtz = vtz * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       		else
       			vtx = vtx * param
       			vty = vty * param
@@ -341,6 +342,7 @@
       		vy0 = py0
       		vz0 = pz0
       end select
+      write(*,*) 'after normalization'
 !     
       Ndiag = (4**indx) - 1
 ! initialize scalars for standard code
@@ -534,8 +536,13 @@
 ! initialize electrons
       nps = 1
       npp = 0
+      write(*,*)' initialize electrons'
+      write(*,*)'vtx,vty,vtz=',vtx,vty,vtz
+      write(*,*)'vx0,vy0,vz0=',vx0,vy0,vz0
+      write(*,*)' before call '
       call mpdistr2h(relativity,me_real,ci,part,edges,npp,nps,vtx,vty,vtz,vx0,vy0,vz0,npx,npy,&
      		        &nx,ny,ipbc,x,y,density_x,density_y,ierr)
+      write(*,*)'initialize electrons -- done '
 ! check for macro electrons initialization error
       if (ierr /= 0) then
         if (kstrt==1) then
