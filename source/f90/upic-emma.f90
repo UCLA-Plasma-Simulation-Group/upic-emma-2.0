@@ -899,7 +899,8 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E1', filenamebase = 'EandB',  &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E1', filenamebase = 'EandB',  &
      &   filepath='EMF/' )
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
 !    &   position=(/0.0,0.0/))
@@ -914,7 +915,8 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E2',filenamebase ='EandB',filepath='EMF/')
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E2',filenamebase ='EandB',filepath='EMF/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E2')
@@ -925,7 +927,8 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E3',filenamebase ='EandB',filepath='EMF/')
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E3',filenamebase ='EandB',filepath='EMF/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E3')
