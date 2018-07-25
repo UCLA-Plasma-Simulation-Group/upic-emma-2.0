@@ -933,6 +933,47 @@
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E3')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+! DIAG B Fields
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = bxyze(1,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B1', filenamebase = 'EandB',  &
+     &   filepath='EMF/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+
+!        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
+!    & basePath='MS',  records='B1')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = bxyze(2,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B2',filenamebase ='EandB',filepath='EMF/')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='B2')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = bxyze(3,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B3',filenamebase ='EandB',filepath='EMF/')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='B3')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
         call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)
