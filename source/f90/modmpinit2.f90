@@ -106,9 +106,9 @@
       	call PDISTR2HR(ci,mass_real,part,edges,npp,nps,vtx,vty,vtz,0.0,0.0,0.0,&
        &npx,npy,nx,ny,idimp,npmax,idps,ipbc,x,y,densx,densy,ierr)                          ! M. Touati
         do i=nps,npp
-            part(3,i)=part(3,i)+vdx
-            part(4,i)=part(4,i)+vdy
-            part(5,i)=part(5,i)+vdz
+            part(3,i)=vdx
+            part(4,i)=vdy
+            part(5,i)=vdz
         enddo
       else
 !      call PDISTR2H(part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,npx,npy, &
