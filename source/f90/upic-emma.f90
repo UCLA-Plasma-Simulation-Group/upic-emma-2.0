@@ -312,7 +312,7 @@
       		vtx = ptx
       		vty = pty
       		vtz = ptz
-      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
+      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. .and. ((vtx**2.)+(vty**2.0)+(vtz**2.)) .ne. 0.) then
       			vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       			vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       			vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
@@ -329,7 +329,7 @@
       		vtx = ptx
       		vty = pty
       		vtz = ptz
-      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
+      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. .and. ((vtx**2.)+(vty**2.0)+(vtz**2.)) .ne. 0.) then
       			vtx = vtx * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       			vty = vty * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       			vtz = vtz * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
