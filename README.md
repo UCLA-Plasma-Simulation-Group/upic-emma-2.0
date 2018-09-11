@@ -8,6 +8,12 @@ New features include:
 * non-square cells
 * FDTD operators for benchmarking
 * additional boundary conditions for fields and particles to allow the study of laser plasma interactions at different intensities.
+* OpenPMD support
+
+Upcoming features include:
+
+* binary collision
+
 
 It also supports Doxygen documentation, to use it, type:
 
