@@ -108,11 +108,11 @@ OPENPMD_MODS = $(OPENPMD_PATH)/parallel_class.o $(OPENPMD_PATH)/hdf5io_class.o
 all : upic-emma clean_mod clean_obj
 
 upic-emma : $(OBJ_PATH)upic-emma.o $(ESOBJS) $(EMOBJS) dtimer.o 
-	$(MPIFC) $(HDF_LIBPATH) $(OPTSF90) -o $(TRG_PATH)upic-emma $(OBJ_PATH)upic-emma.o \
+	$(MPIFC) $(OPTSF90) -o $(TRG_PATH)upic-emma $(OBJ_PATH)upic-emma.o \
 	$(ESOBJS) $(EMOBJS) $(ESMODS) $(EMMODS) \
 	$(OBJ_PATH)mpplib2.o $(OBJ_PATH)mppmod2.o \
 	$(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o \
-	$(ESHOBJS) $(EMHOBJS) $(OPENPMD_MODS) dtimer.o 
+	$(ESHOBJS) $(EMHOBJS) $(OPENPMD_MODS) $(HDF_LIBPATH) dtimer.o 
 
 dtimer.o : $(SRC_PATH_C)dtimer.c
 	$(CC) $(OPTSCC) -c $(SRC_PATH_C)dtimer.c
