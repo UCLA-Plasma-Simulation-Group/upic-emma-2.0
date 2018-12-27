@@ -506,6 +506,7 @@
       allocate(bxyzf(ndim,modesyd,modesxpd))
 ! Time step : dt < 2 / (k_max c) with k_max = pi * sqrt( (1/delta)^2 + (1/delta)^2 )
       dt = cfl*0.45*ci ! (sqrt(2)/pi = 0.45...)      
+      dt = cfl*sqrt(dx*dx+dy*dy)*ci ! (sqrt(2)/pi = 0.45...)      
 ! Modification of the CFL condition for non square cells ( M Touati )
       dt = dt / sqrt(0.5*((1./delta(1)**2.)+(1./delta(2)**2.)))
 ! Allocate pml arrays and set up coefficients needed to computed the PML equations and
@@ -883,9 +884,6 @@
 	  call wmpncguard2(pixyze,nyp,tguard,nx,kstrt,nvp)
 ! Diagnostic of electromagnetic fields in real space ( M Touati )
       if (store_cond) then
-!        call DIAG_REAL_FIELD(N_Ex, N_Ey, N_Ez, N_Bx, N_By, N_Bz,&
-!                             nxe, nypmx, nyp, nx,&
-!                             de, phtime, yp, x, fxyze, bxyze, tdiag)
          do ix=1,nx
              do iy=1,nyp
                  sfield(ix,iy) = fxyze(1,ix,iy)
@@ -923,7 +921,45 @@
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E3')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
-        call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = bxyze(1,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), records='B1', filenamebase = 'EandB',  &
+     &   filepath='EMF/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+!        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
+!    & basePath='MS',  records='E1')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = bxyze(2,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), records='B2',filenamebase ='EandB',filepath='EMF/')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='E2')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = bxyze(3,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), records='B3',filenamebase ='EandB',filepath='EMF/')
+!        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
+!    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
+!    & basePath='MS', meshesPath='FLD', records='E3')
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+
+
+        call DIAG_POYNTING_H5(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)
       end if

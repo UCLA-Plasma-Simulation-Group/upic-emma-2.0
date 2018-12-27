@@ -197,11 +197,12 @@ module antenna
 		alpha = sqrt(     abs(polardir) )
 		beta  = sqrt(1. - abs(polardir) )
         phase = omega0*(phtime-tlaunch)
+        if((phtime .gt. tlaunch) .and. (phtime .lt (tlaunch + FWHMt))) env = sin(3.1415926*phtime-tlaunch/
         cos_phase = cos(phase)
         sin_phase = sin(phase)
 		if (propdir == 1) then
 			if (BCx == 0) then
-				ix = L_PML/delta(1)+3
+				ix = L_PML/delta(1)+10
 				
 			else
                 ix = 2
@@ -210,8 +211,8 @@ module antenna
 			dim2 = 3
 			dim3 = 1
 		    do jj = 1,nyp
-		    	fxyze(dim1,ix,jj) =    fxyze(dim1,ix,jj) + a0 * omega0 * omega0 * alpha * cos_phase
-			fxyze(dim2,ix,jj) =    fxyze(dim2,ix,jj) + a0 * omega0 * omega0 * beta  * cos_phase 
+		    	fxyze(dim1,ix,jj) =    fxyze(dim1,ix,jj) + a0 * omega0 * omega0 * alpha * sin_phase
+			fxyze(dim2,ix,jj) =    fxyze(dim2,ix,jj) + a0 * omega0 * omega0 * beta  * sin_phase 
 			! fxyze(dim3,ii,jj) =   0.
 		    end do
 		else if (propdir == 2) then
