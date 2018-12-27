@@ -4,3 +4,6 @@ upic-emma
 *.dat
 *.o
 *.mod
+.ipynb_checkpoints/h5test-checkpoint.ipynb
+.ipynb_checkpoints/Untitled-checkpoint.ipynb
+untitled.txt
