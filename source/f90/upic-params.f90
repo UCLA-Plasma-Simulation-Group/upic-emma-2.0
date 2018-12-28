@@ -35,6 +35,9 @@
 
       real, parameter :: part_factor = 2.5
 
+      integer, parameter :: p_x_dim = 2
+      integer, parameter :: p_p_dim = 3
+
       end module upic_m_parameters
 
 
