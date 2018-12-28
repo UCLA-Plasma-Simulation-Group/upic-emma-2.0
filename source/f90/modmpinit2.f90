@@ -97,13 +97,19 @@
       character (len=*), intent(in)  :: densx, densy
 ! local data
       integer :: idimp, npmax, idps
+      integer i
 ! extract dimensions
       idimp = size(part,1); npmax = size(part,2)
       idps = size(edges,1)
 ! call low level procedure
       if (relativity == 1) then
-      	call PDISTR2HR(ci,mass_real,part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,&
+      	call PDISTR2HR(ci,mass_real,part,edges,npp,nps,vtx,vty,vtz,0.0,0.0,0.0,&
        &npx,npy,nx,ny,idimp,npmax,idps,ipbc,x,y,densx,densy,ierr)                          ! M. Touati
+        do i=nps,npp
+            part(3,i)=part(3,i)+vdx
+            part(4,i)=part(4,i)+vdy
+            part(5,i)=part(5,i)+vdz
+        enddo
       else
 !      call PDISTR2H(part,edges,npp,nps,vtx,vty,vtz,vdx,vdy,vdz,npx,npy, &
 !     &nx,ny,idimp,npmax,idps,ipbc,ierr)                                       ! M. Touati
@@ -183,12 +189,14 @@
         	edgelx = x(2)
         	at1 = (x(nx)-x(2))/real(npx)
       	endif
-		mu = (ci*vtx)**(-2.)
+	mu = (ci*vtx)**(-2.)
         allocate(xp(npx), yp(npy))
         call getdensity1d(densx, 'x1', edgelx, x(2)-x(1), nx, npx, 32, xp)
         call getdensity1d(densy, 'x2', edgely, y(2)-y(1), ny, npy, 32, yp)
-		if (Bessel_Kn(2,mu)==0.) then
+        write(*,*)'calculate constants -- done',nx,ny,npx,npy
+        if (Bessel_Kn(2,mu)==0.) then
 ! uniform density profile
+
       		do k = 1, npy
       			yt = yp(k) !edgely + at2*(real(k) - 0.5)
       			do j = 1, npx
@@ -201,7 +209,7 @@
       				rand  = ranorm()
       				vzt   = vtz*rand
 ! tests :
-      				if ((yt.ge.edges(1)).and.(yt.lt.edges(2))) then
+      		                if ((yt.ge.edges(1)).and.(yt.lt.edges(2))) then
         				npt = npp + 1
          				if (npt.le.npmax) then
             				part(1,npt) = xt
@@ -283,10 +291,11 @@
       	ierr1(1) = ierr
       	call PPIMAX(ierr1,iwork1,1)
       	ierr = ierr1(1)
+        write(*,*)'dnpxy=',dnpxy
       	dt1 = 1.0e0/dnpxy
-      	sum4(1) = dt1*sum4(1)
-      	sum4(2) = dt1*sum4(2)
-      	sum4(3) = dt1*sum4(3)
+      	sum4(1) = sum4(1)/dnpxy
+      	sum4(2) = sum4(2)/dnpxy
+      	sum4(3) = sum4(3)/dnpxy
       	do j = nps, npp
       		part(3,j) = part(3,j) - sum4(1)
       		part(4,j) = part(4,j) - sum4(2)
@@ -294,7 +303,7 @@
    		end do
 ! process errors
       	dnpxy = dnpxy - dnpx*dble(npy)
-      	if (dnpxy.ne.0.0d0) ierr = dnpxy
+      	if (abs(dnpxy).ge.0.1d0) ierr = dnpxy
 	  end subroutine
 !
 !-----------------------------------------------------------------------

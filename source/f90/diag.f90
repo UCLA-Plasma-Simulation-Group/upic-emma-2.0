@@ -66,6 +66,7 @@ module diag
       character(len=20) :: str
 ! create a folder /results      
       call system('mkdir -p results')
+      call system('mkdir -p EMF')
 ! open files with the unit N_Q entitled dig/"Q""kstrt".dat where "kstrt" is the processor 
 ! reference number (<<MPI) and "Q" is the physical quantity to be stored 
 	  write (str, *) kstrt

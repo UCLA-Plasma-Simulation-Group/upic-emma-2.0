@@ -291,6 +291,7 @@
       call dtimer(dtime,itime,-1)
 ! read the input deck ( M Touati)
       call read_input_deck()
+      write(*,*) 'before normalization'
       relativity = 0
       if (relativistic) relativity = 1
       movion     = moving_ions
@@ -312,9 +313,9 @@
       		vty = pty
       		vtz = ptz
       		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vty = vty * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vtz = vtz * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
+      			vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       		else
       			vtx = vtx
       			vty = vty
@@ -329,9 +330,9 @@
       		vty = pty
       		vtz = ptz
       		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * param * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vty = vty * param * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
-      			vtz = vtz * param * sqrt(3. / ((vtx**2.)+(vty**2.)+(vtz**2.)))
+      			vtx = vtx * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vty = vty * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      			vtz = vtz * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
       		else
       			vtx = vtx * param
       			vty = vty * param
@@ -341,6 +342,7 @@
       		vy0 = py0
       		vz0 = pz0
       end select
+      write(*,*) 'after normalization'
 !     
       Ndiag = (4**indx) - 1
 ! initialize scalars for standard code
@@ -535,8 +537,13 @@
 ! initialize electrons
       nps = 1
       npp = 0
+      write(*,*)' initialize electrons'
+      write(*,*)'vtx,vty,vtz=',vtx,vty,vtz
+      write(*,*)'vx0,vy0,vz0=',vx0,vy0,vz0
+      write(*,*)' before call '
       call mpdistr2h(relativity,me_real,ci,part,edges,npp,nps,vtx,vty,vtz,vx0,vy0,vz0,npx,npy,&
      		        &nx,ny,ipbc,x,y,density_x,density_y,ierr)
+      write(*,*)'initialize electrons -- done '
 ! check for macro electrons initialization error
       if (ierr /= 0) then
         if (kstrt==1) then
@@ -890,7 +897,8 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), records='E1', filenamebase = 'EandB',  &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E1', filenamebase = 'EandB',  &
      &   filepath='EMF/' )
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
 !    &   position=(/0.0,0.0/))
@@ -905,7 +913,8 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), records='E2',filenamebase ='EandB',filepath='EMF/')
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E2',filenamebase ='EandB',filepath='EMF/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E2')
@@ -916,24 +925,29 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), records='E3',filenamebase ='EandB',filepath='EMF/')
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E3',filenamebase ='EandB',filepath='EMF/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
 !    & basePath='MS', meshesPath='FLD', records='E3')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+
+! DIAG B Fields
          do ix=1,nx
              do iy=1,nyp
                  sfield(ix,iy) = bxyze(1,ix,iy)
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), records='B1', filenamebase = 'EandB',  &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B1', filenamebase = 'EandB',  &
      &   filepath='EMF/' )
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
 !    &   position=(/0.0,0.0/))
+
 !        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
-!    & basePath='MS',  records='E1')
+!    & basePath='MS',  records='B1')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
          do ix=1,nx
              do iy=1,nyp
@@ -941,10 +955,11 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), records='B2',filenamebase ='EandB',filepath='EMF/')
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B2',filenamebase ='EandB',filepath='EMF/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
-!    & basePath='MS', meshesPath='FLD', records='E2')
+!    & basePath='MS', meshesPath='FLD', records='B2')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
          do ix=1,nx
              do iy=1,nyp
@@ -952,14 +967,13 @@
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
-     &   gridSpacing = real(delta,4), records='B3',filenamebase ='EandB',filepath='EMF/')
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B3',filenamebase ='EandB',filepath='EMF/')
 !        call file%new(iter=ntime,axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /),&
-!    & basePath='MS', meshesPath='FLD', records='E3')
+!    & basePath='MS', meshesPath='FLD', records='B3')
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
-
-
-        call DIAG_POYNTING_H5(N_Pix,N_Piy,N_Piz,&
+        call DIAG_POYNTING(N_Pix,N_Piy,N_Piz,&
                            nxe, nypmx, nyp, nx,&
                            de, phtime, yp, x, pixyze, tdiag)
       end if
