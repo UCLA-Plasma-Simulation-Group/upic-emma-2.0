@@ -10,7 +10,7 @@ module modmpfieldpml2
 	private :: mpmaxwelb2pml, mpmaxwele2pml
 	contains
 !
-	subroutine setup_pml(sigma,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	subroutine setup_pml(sigma,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	  	                 ax,ay,dt,x,yp,delta,L_PML,n_cond_PML,ci,&
 	                     nx,ny,nxe,nye,BCx,BCy,nyp,nypmx,kxp,nvp,kstrt)
 ! This subroutine allocates the Perfectly Matched Layer (PML) elctromagnetic  
@@ -32,7 +32,7 @@ module modmpfieldpml2
 !          _ delta(1), delta(2) = cell size along x , cell size along y
 !          _ x(i) and yp(j) = y(joff+j) are the values of space grid points positions
 		integer, intent(in)                                 :: nx, ny, nxe, nye
-		integer, intent(in)                                 :: Bcx, Bcy, FTFD
+		integer, intent(in)                                 :: Bcx, Bcy, FDTD
 		integer, intent(in)                                 :: kxp, nyp, nypmx
 		integer, intent(in)                                 :: nvp, kstrt
 		real, intent(in)                                    :: L_PML
@@ -66,7 +66,7 @@ module modmpfieldpml2
 ! Setup PML conductivity
         allocate(sigma(2,nxe,nypmx))
         call setup_sigma(sigma,ax,ay,dt,x,yp,delta,sigma_m,L_PML,n_cond_PML,&
-	                     nx,ny,nxe,nyp,nypmx,BCx,BCy,FTFD,nvp,kstrt)
+	                     nx,ny,nxe,nyp,nypmx,BCx,BCy,FDTD,nvp,kstrt)
 ! Allocate PML EM fields
         allocate(vpml_exyz(4,nye,kxp),vpml_bxyz(4,nye,kxp))
         allocate(vpml_exyz_corr(4,4),vpml_bxyz_corr(4,4))
@@ -97,13 +97,13 @@ module modmpfieldpml2
 	end function filter
 	
 	subroutine setup_sigma(sigma,ax,ay,dt,x,yp,delta,sigma_m,L_PML,n_cond_PML,&
-	                       nx,ny,nxe,nyp,nypmx,BCx,BCy,FTFD,nvp,kstrt)
+	                       nx,ny,nxe,nyp,nypmx,BCx,BCy,FDTD,nvp,kstrt)
 ! this subroutine setup the PNL conductivity sigma in the real space
 ! sigma(1,i,j) = sigma_x(x(i)) and sigma(2,i,j) = sigma_y(y(j))
 		implicit none
 ! inputs
 		integer, intent(in)                :: nx, ny, nxe, nyp, nypmx
-		integer, intent(in)                :: BCx, BCy, FTFD, nvp, kstrt
+		integer, intent(in)                :: BCx, BCy, FDTD, nvp, kstrt
 		real, intent(in)                   :: ax, ay, dt, sigma_m, L_PML, n_cond_PML
 		real, dimension(nxe), intent(in)   :: x
 		real, dimension(nypmx), intent(in) :: yp
@@ -374,7 +374,7 @@ module modmpfieldpml2
     subroutine mpmaxwel2pml(pml_scheme,ndim,indx,indy,nx,nxe,ny,nye,nyp,nypmx,nxhy,nxyh,nyh,kxp,kyp,&
 	                        nvp,kstrt,noff,BCx,BCy,L_PML,ax,ay,affp,ci,dt,kx,ky,x,yp,delta,sigma,&
 	                        ffc,cut,nterf,ierr,mixup,wm,wf,tfield,tfmov,tguard,&
-	                        tfft,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	                        tfft,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	  	                    sct,exyz,bxyz,wescx,wescy,wfppml,wmppml,wfpdump,wmpdump)
 	    implicit none
 ! input :
@@ -384,7 +384,7 @@ module modmpfieldpml2
 	    integer, intent(in) 				     		:: nxhy, nxyh, nyh
 	    integer, intent(in) 				     		:: kxp, kyp
 	    integer, intent(in) 				     		:: nvp, kstrt, noff
-	    integer, intent(in)                      		:: BCx, BCy, FTFD
+	    integer, intent(in)                      		:: BCx, BCy, FDTD
 	    real, intent(in)                         		:: L_PML, ax, ay, affp, ci, dt   
 	    real, dimension(nxe), intent(in)           		:: kx
 	    real, dimension(nye), intent(in)           		:: ky
@@ -414,13 +414,13 @@ module modmpfieldpml2
     		call mpmaxwel2pml_implicit(ndim,indx,indy,nx,nxe,ny,nye,nyp,nypmx,nxhy,nxyh,nyh,kxp,kyp,&
 	                                   nvp,kstrt,noff,BCx,BCy,L_PML,ax,ay,affp,ci,dt,kx,ky,x,yp,delta,sigma,&
 	                                   ffc,cut,nterf,ierr,mixup,wm,wf,tfield,tfmov,tguard,&
-	                                   tfft,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	                                   tfft,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	                                   sct,exyz,bxyz,wescx,wescy,wfppml,wmppml,wfpdump,wmpdump)
     	else
     		call mpmaxwel2pml_yee(ndim,indx,indy,nx,nxe,ny,nye,nyp,nypmx,nxhy,nxyh,nyh,kxp,kyp,&
 	                              nvp,kstrt,noff,BCx,BCy,L_PML,ax,ay,affp,ci,dt,kx,ky,x,yp,delta,sigma,&
 	                              ffc,cut,nterf,ierr,mixup,wm,wf,tfield,tfmov,tguard,&
-	                              tfft,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	                              tfft,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	                              sct,exyz,bxyz,wescx,wescy,wfppml,wmppml,wfpdump,wmpdump)
     	end if
     end subroutine mpmaxwel2pml
@@ -428,7 +428,7 @@ module modmpfieldpml2
     subroutine mpmaxwel2pml_implicit(ndim,indx,indy,nx,nxe,ny,nye,nyp,nypmx,nxhy,nxyh,nyh,kxp,kyp,&
 	                                 nvp,kstrt,noff,BCx,BCy,L_PML,ax,ay,affp,ci,dt,kx,ky,x,yp,delta,sigma,&
 	                                 ffc,cut,nterf,ierr,mixup,wm,wf,tfield,tfmov,tguard,&
-	                                 tfft,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	                                 tfft,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	                                 sct,exyz,bxyz,wescx,wescy,wfppml,wmppml,wfpdump,wmpdump)
 	    implicit none
 ! input :
@@ -438,7 +438,7 @@ module modmpfieldpml2
 	    integer, intent(in) 				     		:: nxhy, nxyh, nyh
 	    integer, intent(in) 				     		:: kxp, kyp
 	    integer, intent(in) 				     		:: nvp, kstrt, noff
-	    integer, intent(in)                      		:: BCx, BCy, FTFD
+	    integer, intent(in)                      		:: BCx, BCy, FDTD
 	    real, intent(in)                         		:: L_PML, ax, ay, affp, ci, dt   
 	    real, dimension(nxe), intent(in)           		:: kx
 	    real, dimension(nye), intent(in)           		:: ky
@@ -468,7 +468,7 @@ module modmpfieldpml2
         real, dimension(4,nxe,nypmx)                    :: vpml_bxyze_np1
 !
 		! Update the PML B field from n to n+1/2'
-		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 		                   cut,ffc,affp,ci,dt,wm,tfield,nx,ny,&
 						   kstrt,kx,ky,ax,ay)
 		! Transform the PML B field at n+1/2 to real space'
@@ -485,7 +485,7 @@ module modmpfieldpml2
 		call wmpfft2rn(vpml_bxyze,vpml_bxyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,&
 					   indy,kstrt,nvp,kyp,ny,nterf,ierr)
 		! Update the PML E field from n to n+1'
-		call mpmaxwele2pml(vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+		call mpmaxwele2pml(vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 		                   cut,ffc,affp,ci,dt,wf,tfield,nx,ny,&
 						   kstrt,kx,ky,ax,ay)
 		! Transform the PML E field at n+1 to real space'
@@ -506,7 +506,7 @@ module modmpfieldpml2
 		call wmpfft2rn(vpml_exyze,vpml_exyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,&
 					   indy,kstrt,nvp,kyp,ny,nterf,ierr)
 		! Update the PML B field from n+1/2 to n+1'
-		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 		                   cut,ffc,affp,ci,dt,wm,tfield,nx,ny,&
 						   kstrt,kx,ky,ax,ay)
 		! Copy the B field at n+1
@@ -535,7 +535,7 @@ module modmpfieldpml2
     subroutine mpmaxwel2pml_yee(ndim,indx,indy,nx,nxe,ny,nye,nyp,nypmx,nxhy,nxyh,nyh,kxp,kyp,&
 	                            nvp,kstrt,noff,BCx,BCy,L_PML,ax,ay,affp,ci,dt,kx,ky,x,yp,delta,sigma,&
 	                            ffc,cut,nterf,ierr,mixup,wm,wf,tfield,tfmov,tguard,&
-	                            tfft,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	                            tfft,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	                            sct,exyz,bxyz,wescx,wescy,wfppml,wmppml,wfpdump,wmpdump)
 	    implicit none
 ! input :
@@ -545,7 +545,7 @@ module modmpfieldpml2
 	    integer, intent(in) 				     		:: nxhy, nxyh, nyh
 	    integer, intent(in) 				     		:: kxp, kyp
 	    integer, intent(in) 				     		:: nvp, kstrt, noff
-	    integer, intent(in)                      		:: BCx, BCy, FTFD
+	    integer, intent(in)                      		:: BCx, BCy, FDTD
 	    real, intent(in)                         		:: L_PML, ax, ay, affp, ci, dt   
 	    real, dimension(nxe), intent(in)           		:: kx
 	    real, dimension(nye), intent(in)           		:: ky
@@ -575,7 +575,7 @@ module modmpfieldpml2
         real, dimension(4,nxe,nypmx)                    :: vpml_bxyze_np1
 !
 		! Update the PML B field from n to n+1/2'
-		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 		                   cut,ffc,affp,ci,dt,wm,tfield,nx,ny,&
 						   kstrt,kx,ky,ax,ay)
 		! Transform the PML B field at n+1/2 and the E field at n to real space'
@@ -597,7 +597,7 @@ module modmpfieldpml2
 		call wmpfft2rn(vpml_exyze,vpml_exyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,&
 					   indy,kstrt,nvp,kyp,ny,nterf,ierr)
 		! Update the PML E field from n to n+1'
-		call mpmaxwele2pml(vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+		call mpmaxwele2pml(vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 		                   cut,ffc,affp,ci,dt,wf,tfield,nx,ny,&
 						   kstrt,kx,ky,ax,ay)
 		! Transform the PML E field at n+1 and the B field at n+1/2 to real space'
@@ -623,7 +623,7 @@ module modmpfieldpml2
 		call wmpfft2rn(vpml_exyze,vpml_exyz,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,&
 					   indy,kstrt,nvp,kyp,ny,nterf,ierr)
 		! Update the PML B field from n+1/2 to n+1'
-		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+		call mpmaxwelb2pml(vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 		                   cut,ffc,affp,ci,dt,wm,tfield,nx,ny,&
 						   kstrt,kx,ky,ax,ay)
 		! Copy the B field at n+1
@@ -897,13 +897,13 @@ module modmpfieldpml2
         !$OMP END PARALLEL DO
 	end subroutine mpupdatefields
 	
-	subroutine mpmaxwelb2pml(exy,bxy,FTFD,exy_corr,bxy_corr,&
+	subroutine mpmaxwelb2pml(exy,bxy,FDTD,exy_corr,bxy_corr,&
 	                         cu,ffc,affp,ci,dt,wm,tfield,nx,ny,&
      					     kstrt,kx,ky,ax,ay)
 		! solves 2d maxwell's equation in fourier space for
 		! transverse magnetic field for a half time step
       	implicit none
-      	integer, intent(in)                      :: nx, ny, kstrt, FTFD
+      	integer, intent(in)                      :: nx, ny, kstrt, FDTD
       	real, intent(in)                         :: affp, ci, dt, ax, ay
      	real, intent(inout)                      :: wm, tfield
       	complex, dimension(:,:,:), intent(in)    :: cu
@@ -921,16 +921,16 @@ module modmpfieldpml2
 		! initialize timer
       	call dtimer(dtime,itime,-1)
 		! call low level procedure
-		if (FTFD > 0) then
+		if (FDTD > 0) then
       		call MPPMAXWELB2YEEPML(exy,bxy,exy_corr,bxy_corr,&
 	          	  	               cu,ffc,affp,ci,dt,wm,nx,ny,kstrt,nyv,&
      	       	                   kxp,nyhd,kx,ky,ax,ay)
-     	else if (FTFD == 0) then
+     	else if (FDTD == 0) then
      		call MPPMAXWELB2SPECTRALPML(exy,bxy,&
 	                                    cu,ffc,affp,ci,dt,wm,nx,ny,kstrt,nyv,&
      	                                kxp,nyhd,kx,ky,ax,ay)
      	else
-     		print*,'FTFD < 0 NOT SUPPORTED'
+     		print*,'FDTD < 0 NOT SUPPORTED'
      		stop
      	end if
 		! record time
@@ -938,13 +938,13 @@ module modmpfieldpml2
 		tfield = tfield + real(dtime)
 	end subroutine
 	
-	subroutine mpmaxwele2pml(exy,bxy,FTFD,exy_corr,bxy_corr,&
+	subroutine mpmaxwele2pml(exy,bxy,FDTD,exy_corr,bxy_corr,&
 	                         cu,ffc,affp,ci,dt,wf,tfield,nx,ny,&
      					     kstrt,kx,ky,ax,ay)
 		! solves 2d maxwell's equation in fourier space for
 		! transverse magnetic field for a half time step
       	implicit none
-      	integer, intent(in)                      :: nx, ny, kstrt, FTFD
+      	integer, intent(in)                      :: nx, ny, kstrt, FDTD
       	real, intent(in)                         :: affp, ci, dt, ax, ay
      	real, intent(inout)                      :: wf, tfield
       	complex, dimension(:,:,:), intent(in)    :: cu
@@ -962,16 +962,16 @@ module modmpfieldpml2
 		! initialize timer
       	call dtimer(dtime,itime,-1)
 		! call low level procedure
-		if (FTFD > 0) then
+		if (FDTD > 0) then
       		call MPPMAXWELE2YEEPML(exy,bxy,exy_corr,bxy_corr,&
 	                      	    cu,ffc,affp,ci,dt,wf,nx,ny,kstrt,nyv,&
      	                    	kxp,nyhd,kx,ky,ax,ay)
-     	else if (FTFD == 0) then
+     	else if (FDTD == 0) then
      		call MPPMAXWELE2SPECTRALPML(exy,bxy,&
 	                                    cu,ffc,affp,ci,dt,wf,nx,ny,kstrt,nyv,&
      	                                kxp,nyhd,kx,ky,ax,ay)
      	else
-     		print*,'FTFD < 0 NOT SUPPORTED'
+     		print*,'FDTD < 0 NOT SUPPORTED'
      		stop
      	end if
 		! record time

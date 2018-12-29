@@ -5,3 +5,4 @@ upic-emma
 *.o
 *.mod
 input_deck
+*.swp
