@@ -507,9 +507,9 @@
       allocate(exyzf(ndim,modesyd,modesxpd))
       allocate(bxyzf(ndim,modesyd,modesxpd))
 ! Time step : dt < 2 / (k_max c) with k_max = pi * sqrt( (1/delta)^2 + (1/delta)^2 )
-      dt = cfl*0.45*ci ! (sqrt(2)/pi = 0.45...)      
-! Modification of the CFL condition for non square cells ( M Touati )
-      dt = dt / sqrt(0.5*((1./delta(1)**2.)+(1./delta(2)**2.)))
+      dt = cfl*0.636619772*ci ! (2/pi = 0.636619772)      
+! Modification of the CFL condition for non square cells ( )
+      dt = dt / sqrt(((1./delta(1)**2.)+(1./delta(2)**2.)))
 ! Allocate pml arrays and set up coefficients needed to computed the PML equations and
 ! modification of the CFL condition for solving the PML equations
 	  if ((BCx == 0) .or. (BCy == 0)) then
@@ -717,7 +717,7 @@
 	  end if
 !
 ! test case : generate a 2D-cylidrical EM wave generated from x1,y1 < x,y < x2,y2
-        cutot = 0.
+      cutot = 0.
       qtot  = 0.
       ! centered case :
       x1 = 63.
@@ -727,16 +727,22 @@
       cu0    = -1.e1
       v0     = 1.e-3 / ci
       n0     = - cu0/v0 
+
+! pulse to check dispersion
+      if (phtime .lt. 0.5) then 
+      write(*,*)'time=',phtime
       do ii=1,nxe
             do jj=1,nypmx
                   if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
                   if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
-                        cutot(2,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
+                        cutot(3,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
                         wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
                   end if
                   end if
             end do
       end do
+      end if
+! point charge in space + time 
 
 ! Add laser pulse fields in real space
         if ((phtime >= tlaunch) .and. laserpulse) then
