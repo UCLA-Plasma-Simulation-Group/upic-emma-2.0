@@ -1183,7 +1183,7 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          dky = ky(k)
          k_mod = sqrt(dkx*dkx+dky*dky)
          s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
-         c_h = cos(k_mod/ci * 0.5 * dt) * 2.0 / (k_mod * cdt)
+         c_h = cos(k_mod/ci * 0.5 * dt)
          cdt_corr =  s_h
          cdth_corr = 0.5 * s_h
          afdt = adt*aimag(ffc(k,j))
@@ -1262,6 +1262,11 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
    10    continue
 ! ky = 0
 ! IDFT{Ex}(kpx(j),-ky(1)=0) = exy(1,1,j) (kpx(j)=kx(j+joff+1))
+         k_mod = abs(dkx)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
          afdt = adt*aimag(ffc(1,j))
          ! update magnetic field half time step
          zt1 = cmplx(-aimag(exy(3,1,j)),real(exy(3,1,j)))
@@ -1306,6 +1311,11 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          dkx = kx(nxh+1)
          do 30 k = 2, nyh
          dky = ky(k)
+         k_mod = abs(dky)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
 ! kx = 0
 ! IDFT[Ex](kx(1)=0, ky(k)) = exy(1,k,1)
 ! IDFT[Ex](kx(1)=0,-ky(k)) = conjg(exy(1,k,1))
@@ -1505,10 +1515,10 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          dky = ky(k)
          afdt = adt*aimag(ffc(k,j))
          k_mod = sqrt(dkx*dkx+dky*dky)
-         s_h = sin(k_mod*cdt*0.5)
-         c_h = cos(k_mod*cdt*0.5)
-         cdt_corr = cdt * s_h
-         cdth_corr = cdth * s_h
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         cdt_corr = s_h
+         cdth_corr = 0.5 * s_h
 ! ky > 0
 ! IDFT[Ex](kpx(j),ky(k)) = exy(1,k,j) (kpx(j) = kx(j+joff+1))
          ! update magnetic field half time step
@@ -1587,6 +1597,11 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
    10    continue
 ! ky = 0
 ! IDFT{Ex}(kpx(j),-ky(1)=0) = exy(1,1,j) (kpx(j)=kx(j+joff+1))
+         k_mod = abs(dkx)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
          afdt = adt*aimag(ffc(1,j))
          ! update magnetic field half time step
          zt1 = cmplx(-aimag(exy(3,1,j)),real(exy(3,1,j)))
@@ -1661,6 +1676,12 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          dkx = kx(nxh+1)
          do 30 k = 2, nyh
          dky = ky(k)
+         k_mod = abs(dky)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
+         
 ! kx = 0
 ! IDFT[Ex](kx(1)=0, ky(k)) = exy(1,k,1)
 ! IDFT[Ex](kx(1)=0,-ky(k)) = conjg(exy(1,k,1))

@@ -271,18 +271,18 @@
 !     &kxp,nyhd)                                                               ! M. Touati
 	  if (FDTD == 0) then
 ! old leap-frog
-      call MPPMAXWEL2(exy,bxy,cu,ffc,                                     &
-                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
-! new PSATD
-!     call MPPMAXWEL2_PSATD(exy,bxy,cu,ffc,                               &
+!     call MPPMAXWEL2(exy,bxy,cu,ffc,                                     &
 !                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+! new PSATD
+      call MPPMAXWEL2_PSATD(exy,bxy,cu,ffc,                               &
+                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
       else if (FDTD > 0) then
 ! old leap-frog
-      call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,                &
-                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
-! new PSATD
-!     call MPPMAXWEL2YEE_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,          &
+!     call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,                &
 !                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+! new PSATD
+      call MPPMAXWEL2YEE_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,          &
+                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
       else
       	print*,'FDTD < 0 not supported'
       	stop

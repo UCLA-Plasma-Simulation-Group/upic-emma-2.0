@@ -506,8 +506,13 @@
       allocate(cuf(ndim,modesyd,modesxpd))
       allocate(exyzf(ndim,modesyd,modesxpd))
       allocate(bxyzf(ndim,modesyd,modesxpd))
-! Time step : dt < 2 / (k_max c) with k_max = pi * sqrt( (1/delta)^2 + (1/delta)^2 )
-      dt = cfl*0.636619772*ci ! (2/pi = 0.636619772)      
+! Time step : dt < 2 / (k_max c) with k_max = pi * sqrt( (1/delta)^2 + (1/delta)^2 )  -- spectral
+!             dt < 1 / c sqrt( ... ) -- FDTD
+      if(FDTD .eq. 0) then
+          dt = cfl*0.636619772*ci ! (2/pi = 0.636619772)      
+      else
+          dt = cfl * ci
+      endif
 ! Modification of the CFL condition for non square cells ( )
       dt = dt / sqrt(((1./delta(1)**2.)+(1./delta(2)**2.)))
 ! Allocate pml arrays and set up coefficients needed to computed the PML equations and
