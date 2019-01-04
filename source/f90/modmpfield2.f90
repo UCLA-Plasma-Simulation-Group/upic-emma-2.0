@@ -271,13 +271,13 @@
 !     &kxp,nyhd)                                                               ! M. Touati
 	  if (FDTD == 0) then
 ! old leap-frog
-!     call MPPMAXWEL2(exy,bxy,cu,ffc,                                     &
-!                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+!     call MPPMAXWEL2(exy,bxy,exy_corr,bxy_corr,cu,ffc,                   &
+!                 affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
 ! new PSATD
-      call MPPMAXWEL2_PSATD(exy,bxy,cu,ffc,                               &
-                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+      call MPPMAXWEL2_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,             &
+                    affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
       else if (FDTD > 0) then
-! old leap-frog
+! old leap-frog in time, center difference in space
 !     call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,                &
 !                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
 ! new PSATD

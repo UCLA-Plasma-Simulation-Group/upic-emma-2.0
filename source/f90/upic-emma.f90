@@ -734,8 +734,8 @@
       n0     = - cu0/v0 
 
 ! pulse to check dispersion
-      if (phtime .lt. 0.5) then 
-      write(*,*)'time=',phtime
+      if (phtime .lt. 0.1) then 
+!     write(*,*)'time=',phtime
       do ii=1,nxe
             do jj=1,nypmx
                   if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
