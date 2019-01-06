@@ -244,7 +244,8 @@
 !-----------------------------------------------------------------------
 !      subroutine mpmaxwel2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,tfield,nx,ny,&
 !     &kstrt)                                                                  ! M. Touati
-      subroutine mpmaxwel2(exy,bxy,FDTD,exy_corr,bxy_corr,cu,ffc,            &
+!23456789*123456789*123456789*123456789*123456789*123456789*123456789*123456
+      subroutine mpmaxwel2(exy,bxy,FDTD,exy_corr,bxy_corr,cu,ffc,       &
      &                  affp,ci,dt,wf,wm,tfield,nx,ny,kstrt,kx,ky,ax,ay)       ! M. Touati
 ! solves 2-1/2d maxwell's equation for unsmoothed transverse electric
 ! and magnetic fields
@@ -256,7 +257,7 @@
       complex, dimension(:,:), intent(inout)   :: exy_corr, bxy_corr
       complex, dimension(:,:,:), intent(in)    :: cu
       complex, dimension(:,:), intent(in)      :: ffc
-      real, dimension(:), intent(in)           :: kx, ky                       ! M. Touati
+      real, dimension(:), intent(in)           :: kx, ky                       
 ! local data
       integer :: nyv, kxp, nyhd
       integer, dimension(4) :: itime
@@ -268,24 +269,27 @@
       call dtimer(dtime,itime,-1)
 ! call low level procedure
 !      call MPPMAXWEL2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,   &
-!     &kxp,nyhd)                                                               ! M. Touati
+!     &kxp,nyhd)                                                               
 	  if (FDTD == 0) then
 ! old leap-frog
-!     call MPPMAXWEL2(exy,bxy,exy_corr,bxy_corr,cu,ffc,                   &
-!                 affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+!23456789*123456789*123456789*123456789*123456789*123456789*123456789*123456
+!      call MPPMAXWEL2(exy, bxy, exy_corr, bxy_corr, cu, ffc,             &
+!    &      affp,ci,                                                      &
+!     &     dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      
+!23456
 ! new PSATD
       call MPPMAXWEL2_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,             &
-                    affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+                    affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
       else if (FDTD > 0) then
 ! old leap-frog in time, center difference in space
-!     call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,                &
-!                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+!     call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,               &
+!                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
 ! new PSATD
       call MPPMAXWEL2YEE_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,          &
-                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
       else
-      	print*,'FDTD < 0 not supported'
-      	stop
+      	  write(*,*) 'FDTD < 0 not supported'
+      	  stop
       end if
 ! record time
       call dtimer(dtime,itime,1)

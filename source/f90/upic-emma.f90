@@ -734,19 +734,19 @@
       n0     = - cu0/v0 
 
 ! pulse to check dispersion
-      if (phtime .lt. 0.1) then 
+!     if (phtime .lt. 0.1) then 
 !     write(*,*)'time=',phtime
-      do ii=1,nxe
-            do jj=1,nypmx
-                  if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
-                  if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
-                        cutot(3,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
-                        wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
-                  end if
-                  end if
-            end do
-      end do
-      end if
+!     do ii=1,nxe
+!           do jj=1,nypmx
+!                 if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
+!                 if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
+!                       cutot(3,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
+!                       wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
+!                 end if
+!                 end if
+!           end do
+!     end do
+!     end if
 ! point charge in space + time 
 
 ! Add laser pulse fields in real space

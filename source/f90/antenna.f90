@@ -210,8 +210,8 @@ module antenna
 			dim2 = 3
 			dim3 = 1
 		    do jj = 1,nyp
-		    	fxyze(dim1,ix,jj) =    fxyze(dim1,ix,jj) + a0 * omega0 * omega0 * alpha * cos_phase
-			fxyze(dim2,ix,jj) =    fxyze(dim2,ix,jj) + a0 * omega0 * omega0 * beta  * cos_phase 
+		    	fxyze(dim1,ix,jj) =    fxyze(dim1,ix,jj) + a0 * omega0 * omega0 * alpha * sin_phase
+			fxyze(dim2,ix,jj) =    fxyze(dim2,ix,jj) + a0 * omega0 * omega0 * beta  * sin_phase 
 			! fxyze(dim3,ii,jj) =   0.
 		    end do
 		else if (propdir == 2) then

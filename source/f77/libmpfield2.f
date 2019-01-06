@@ -775,9 +775,7 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
       return
       end
 !-----------------------------------------------------------------------
-!      subroutine MPPMAXWEL2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,nx,ny,kstrt,&
-!     &nyv,kxp,nyhd)                                                           ! M. Touati
-      subroutine MPPMAXWEL2(exy,bxy,exy_corr,bxy_corr,cu,ffc,                             &
+      subroutine MPPMAXWEL2(exy,bxy,exy_corr,bxy_corr,cu,ffc,           &
      &affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)                   ! M. Touati
 ! this subroutine solves 2d maxwell's equation in fourier space for
 ! transverse electric and magnetic fields with periodic boundary
@@ -1087,7 +1085,7 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
 !-----------------------------------------------------------------------
 !      subroutine MPPMAXWEL2_PSATD(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,nx,ny,kstrt,&
 !     &nyv,kxp,nyhd)                                                           
-      subroutine MPPMAXWEL2_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,                       &
+      subroutine MPPMAXWEL2_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,     &
      &affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)            
 ! this subroutine solves 2d maxwell's equation in fourier space for
 ! transverse electric and magnetic fields with periodic boundary
@@ -1193,6 +1191,7 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          k_mod = sqrt(dkx*dkx+dky*dky)
          s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
          c_h = cos(k_mod/ci * 0.5 * dt)
+         c_h = 1.0
          cdt_corr =  s_h
          cdth_corr = 0.5 * s_h
          afdt = adt*aimag(ffc(k,j))
@@ -1367,6 +1366,12 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
 ! kx = ky = 0
 ! IDTF[Ex](kx(1)=0  ,-ky(1)=0) = cmplx(real(exy(1,1,1)),0.0)
          afdt = adt
+         k_mod = 0.0
+         s_h = dt
+         c_h = 1.0
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * cdt_corr
+
          cu_temp(1:3) = cmplx(real(cu(1:3,1,1)), 0.0)
 
          exy_corr(1,1:3) = exy_corr(1,1:3) + afdt * cu_temp(1:3)
@@ -1392,21 +1397,28 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
 ! IDFT[Ex](kx(nxh+1),-ky(1)=0)   = cmplx(aimag(exy(1,1,1)),0.0)
          afdt = adt * exp(-0.5 *((ax*dkx)*(ax*dkx)))
 ! PSATD corrections here
- 
+         k_mod = abs(dkx)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         c_h = 1.0
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
          cu_temp(2)  = cmplx(aimag(cu(2,1,1)),0.0)
          cu_temp(3)  = cmplx(aimag(cu(3,1,1)),0.0)
          ! update magnetic field half time step
          zt1 = cmplx(-aimag(exy_corr(2,3)),real(exy_corr(2,3)))
          zt2 = cmplx(-aimag(exy_corr(2,2)),real(exy_corr(2,2)))
          bxy_corr(2,1) = zero
-         bxy_corr(2,2) = bxy_corr(2,2) + cdth*(dkx*zt1)
-         bxy_corr(2,3) = bxy_corr(2,3) - cdth*(dkx*zt2)
+         bxy_corr(2,2) = c_h * bxy_corr(2,2) + cdth_corr *(dkx*zt1)
+         bxy_corr(2,3) = c_h * bxy_corr(2,3) - cdth_corr *(dkx*zt2)
          ! update electric field whole time step
          zt1 = cmplx(-aimag(bxy_corr(2,3)),real(bxy_corr(2,3)))
          zt2 = cmplx(-aimag(bxy_corr(2,2)),real(bxy_corr(2,2)))
          exy_corr(2,1) = zero
-         exy_corr(2,2) = exy_corr(2,2) - cdt*(dkx*zt1) - afdt*cu_temp(2)
-         exy_corr(2,3) = exy_corr(2,3) + cdt*(dkx*zt2) - afdt*cu_temp(3)
+         exy_corr(2,2) = c_h * exy_corr(2,2) - cdt_corr *               &
+     &   (dkx*zt1) - afdt*cu_temp(2)
+         exy_corr(2,3) = c_h * exy_corr(2,3) + cdt_corr *               &
+     &   (dkx*zt2) - afdt*cu_temp(3)
          ! update magnetic field half time step and store electric field
          zt1 = cmplx(-aimag(exy_corr(2,3)),real(exy_corr(2,3)))
          zt2 = cmplx(-aimag(exy_corr(2,2)),real(exy_corr(2,2)))
@@ -1419,8 +1431,8 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          ws = ws + anorm*(zt7*conjg(zt7) + zt8*conjg(zt8)               &
      &                  + zt9*conjg(zt9))
          bxy_corr(2,1) = zero
-         bxy_corr(2,2) = bxy_corr(2,2) + cdth*(dkx*zt1)
-         bxy_corr(2,3) = bxy_corr(2,3) - cdth*(dkx*zt2)
+         bxy_corr(2,2) = c_h * bxy_corr(2,2) + cdt_corr*(dkx*zt1)
+         bxy_corr(2,3) = c_h * bxy_corr(2,3) - cdt_corr*(dkx*zt2)
          zt4 = cmplx(real(bxy_corr(2,1)),0.0)
          zt5 = cmplx(real(bxy_corr(2,2)),0.0)
          zt6 = cmplx(real(bxy_corr(2,3)),0.0)
@@ -1440,22 +1452,30 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
 ! IDTF[Ex](kx(1)=0  ,-ky(nyh+1)) = cmplx( real(exy(1,k1,1)),0.0)
 
          afdt = adt*exp(-0.5*((ay*dky)**2.))
-
+! PSATD corrections here
+         k_mod = abs(dky)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         c_h = 1.0
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
 
          cu_temp(1)  = cmplx(real(cu(1,k1,1)),0.0)
          cu_temp(3)  = cmplx(real(cu(3,k1,1)),0.0)
          ! update magnetic field half time step
          zt1 = cmplx(-aimag(exy_corr(3,3)),real(exy_corr(3,3)))
          zt3 = cmplx(-aimag(exy_corr(3,1)),real(exy_corr(3,1)))
-         bxy_corr(3,1) = bxy_corr(3,1) + cdth*(dky*zt1)
+         bxy_corr(3,1) = c_h * bxy_corr(3,1) + cdth_corr*(dky*zt1)
          bxy_corr(3,2) = zero
-         bxy_corr(3,3) = bxy_corr(3,3) - cdth*(dky*zt3)
+         bxy_corr(3,3) = c_h * bxy_corr(3,3) - cdth_corr*(dky*zt3)
          ! update electric field whole time step
          zt1 = cmplx(-aimag(bxy_corr(3,3)),real(bxy_corr(3,3)))
          zt3 = cmplx(-aimag(bxy_corr(3,1)),real(bxy_corr(3,1)))
-         exy_corr(3,1) = exy_corr(3,1) - cdt*(dky*zt1) - afdt*cu_temp(1)
+         exy_corr(3,1) = c_h * exy_corr(3,1) - cdt_corr*(dky*zt1) -           &
+     &   afdt*cu_temp(1)
          exy_corr(3,2) = zero
-         exy_corr(3,3) = exy_corr(3,3) + cdt*(dky*zt3) - afdt*cu_temp(3)
+         exy_corr(3,3) = c_h * exy_corr(3,3) + cdt_corr*(dky*zt3) -           &
+     &   afdt*cu_temp(3)
          ! update magnetic field half time step and store electric field
          zt1 = cmplx(-aimag(exy_corr(3,3)),real(exy_corr(3,3)))
          zt3 = cmplx(-aimag(exy_corr(3,1)),real(exy_corr(3,1)))
@@ -1467,9 +1487,9 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          exy_1_k1(3)  = zt9
          ws = ws + anorm*(zt7*conjg(zt7) + zt8*conjg(zt8)               &
      &                  + zt9*conjg(zt9))
-         bxy_corr(3,1) = bxy_corr(3,1) + cdth*(dky*zt1)
+         bxy_corr(3,1) = c_h * bxy_corr(3,1) + cdt_corr*(dky*zt1)
          bxy_corr(3,2) = zero
-         bxy_corr(3,3) = bxy_corr(3,3) - cdth*(dky*zt3)
+         bxy_corr(3,3) = c_h * bxy_corr(3,3) - cdt_corr*(dky*zt3)
          zt4 = cmplx(real(bxy_corr(3,1)),0.0)
          zt5 = cmplx(real(bxy_corr(3,2)),0.0)
          zt6 = cmplx(real(bxy_corr(3,3)),0.0)
@@ -1485,6 +1505,11 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
 
 ! PSATD corrections here
 
+         k_mod = sqrt(dkx*dkx + dky * dky)
+         s_h = sin(k_mod/ci * 0.5 * dt) * ci * 2.0 / k_mod
+         c_h = cos(k_mod/ci * 0.5 * dt)
+         cdt_corr =  s_h
+         cdth_corr = 0.5 * s_h
          cu_temp(1)  = cmplx(aimag(cu(1,k1,1)),0.0)
          cu_temp(2)  = cmplx(aimag(cu(2,k1,1)),0.0)
          cu_temp(3)  = cmplx(aimag(cu(3,k1,1)),0.0)
@@ -1499,11 +1524,12 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          zt1 = cmplx(-aimag(bxy_corr(4,3)),real(bxy_corr(4,3)))
          zt2 = cmplx(-aimag(bxy_corr(4,2)),real(bxy_corr(4,2)))
          zt3 = cmplx(-aimag(bxy_corr(4,1)),real(bxy_corr(4,1)))
-         exy_corr(4,1) = exy_corr(4,1) - cdt*(dky*zt1)                  &
+         exy_corr(4,1) = c_h *exy_corr(4,1) - cdt_corr*(dky*zt1)        &
      &                 - afdt*cu_temp(1)
-         exy_corr(4,2) = exy_corr(4,2) - cdt*(dkx*zt1)                  &
+         exy_corr(4,2) = c_h * exy_corr(4,2) - cdt_corr*(dkx*zt1)       &
      &                 - afdt*cu_temp(2)
-         exy_corr(4,3) = exy_corr(4,3) + cdt*(dkx*zt2 + dky*zt3)        &
+         exy_corr(4,3) = c_h * exy_corr(4,3) +                          &
+     &   cdt_corr*(dkx*zt2 + dky*zt3)                                   &
      &                 - afdt*cu_temp(3)
          ! update magnetic field half time step and store electric field
          zt1 = cmplx(-aimag(exy_corr(4,3)),real(exy_corr(4,3)))
