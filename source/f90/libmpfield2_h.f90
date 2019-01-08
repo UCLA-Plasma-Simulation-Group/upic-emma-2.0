@@ -4,10 +4,8 @@
       implicit none
 !
       interface
-!         subroutine MPPOIS22(q,fxy,isign,ffc,ax,ay,affp,we,nx,ny,kstrt, &
-!     &nyv,kxp,nyhd)                                                           ! M. Touati
          subroutine MPPOIS22(q,fxy,isign,ffc,ax,ay,affp,we,nx,ny,kstrt, &
-     &nyv,kxp,nyhd,kx,ky)                                                      ! M. Touati
+     &nyv,kxp,nyhd,kx,ky)                                                    
          implicit none
          integer, intent(in) :: isign, nx, ny, kstrt, nyv, kxp, nyhd
          real, intent(in) :: ax, ay, affp
@@ -79,13 +77,14 @@
       interface
 !         subroutine MPPMAXWEL2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,nx,ny,   &
 !     &kstrt,nyv,kxp,nyhd)
-		 subroutine MPPMAXWEL2(exy,bxy,cu,ffc,&
+		 subroutine MPPMAXWEL2(exy,bxy,exy_corr,bxy_corr,cu,ffc, &
      &affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)                   ! M. Touati
          implicit none
          integer, intent(in) :: nx, ny, kstrt, nyv, kxp, nyhd
          real, intent(in) :: affp, ci, dt, ax, ay
          real, intent(inout) :: wf, wm
          complex, dimension(3,nyv,kxp), intent(inout) :: exy, bxy
+         complex, dimension(3,4) :: exy_corr, bxy_corr
          complex, dimension(3,nyv,kxp), intent(in)  :: cu
          complex, dimension(nyhd,kxp), intent(in) :: ffc
          real, dimension(nx+2), intent(in) :: kx                               ! M. Touati

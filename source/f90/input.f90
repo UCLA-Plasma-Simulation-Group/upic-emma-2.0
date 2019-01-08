@@ -9,7 +9,7 @@ module input
 !=====================================================================================
 ! Simulation options :
 		integer, public          :: N_threads
-		integer, public          :: FTFD
+		integer, public          :: FDTD
 		real, public             :: cfl
 		logical, public          :: relativistic
 		logical, public          :: moving_ions
@@ -75,8 +75,8 @@ module input
 ! Simulation options :
 			case ('#N_threads')
 				N_threads = get_integer(str(istr+1:))
-			case ('#FTFD')
-				FTFD = get_integer(str(istr+1:))
+			case ('#FDTD')
+				FDTD = get_integer(str(istr+1:))
 			case ('#cfl')
 				cfl = get_real(str(istr+1:))
 			case ('#laserpulse')  
