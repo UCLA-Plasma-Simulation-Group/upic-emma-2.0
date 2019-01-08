@@ -282,11 +282,11 @@
                     affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
       else if (FDTD > 0) then
 ! old leap-frog in time, center difference in space
-!     call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,               &
-!                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
-! new PSATD
-      call MPPMAXWEL2YEE_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,          &
+      call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,               &
                    affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
+! new PSATD
+!     call MPPMAXWEL2YEE_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,          &
+!                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
       else
       	  write(*,*) 'FDTD < 0 not supported'
       	  stop

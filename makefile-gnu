@@ -68,7 +68,7 @@ MOD_PATH =
 
 TRG_PATH = 
 
-OPENPMD_PATH = ../Fortran-OpenPMD-File-Writers/
+OPENPMD_PATH = ../../Fortran-OpenPMD-File-Writers/
 # OPENPMD_PATH = /Users/franktsung/vst-extra/FranksFolder/Work/codes/Fortran-OpenPMD-File-Writers
 HDF_LIBPATH = -L/usr/local/lib -lhdf5_fortran -lhdf5_hl -lhdf5 -lz
 
@@ -113,6 +113,9 @@ upic-emma : $(OBJ_PATH)upic-emma.o $(ESOBJS) $(EMOBJS) dtimer.o
 	$(OBJ_PATH)mpplib2.o $(OBJ_PATH)mppmod2.o \
 	$(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o \
 	$(ESHOBJS) $(EMHOBJS) $(OPENPMD_MODS) dtimer.o 
+
+$(OBJ_PATH)upic-params.o : $(SRC_PATH_F90)upic-params.f90
+	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-params.o -c $(SRC_PATH_F90)upic-params.f90
 
 dtimer.o : $(SRC_PATH_C)dtimer.c
 	$(CC) $(OPTSCC) -c $(SRC_PATH_C)dtimer.c
@@ -204,10 +207,10 @@ $(OBJ_PATH)modmpgard2.o : $(SRC_PATH_F90)modmpgard2.f90 $(OBJ_PATH)libmpgard2_h.
 $(OBJ_PATH)modmpfft2.o : $(SRC_PATH_F90)modmpfft2.f90 $(OBJ_PATH)libmpfft2_h.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)modmpfft2.o -c $(SRC_PATH_F90)modmpfft2.f90
 
-$(OBJ_PATH)modmpfield2.o : $(SRC_PATH_F90)modmpfield2.f90 $(OBJ_PATH)libmpfield2_h.o
+$(OBJ_PATH)modmpfield2.o : $(SRC_PATH_F90)modmpfield2.f90 $(OBJ_PATH)libmpfield2.o $(OBJ_PATH)libmpfield2_h.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)modmpfield2.o -c $(SRC_PATH_F90)modmpfield2.f90
 
-$(OBJ_PATH)ompplib2.o : $(SRC_PATH_F90)ompplib2.f90 $(OBJ_PATH)modmpsort2.o $(OBJ_PATH)modmpfft2.o \
+$(OBJ_PATH)ompplib2.o : $(SRC_PATH_F90)ompplib2.f90 $(OBJ_PATH)upic-params.o $(OBJ_PATH)modmpsort2.o $(OBJ_PATH)modmpfft2.o \
 	$(OBJ_PATH)modmpgard2.o $(OBJ_PATH)mppmod2.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)ompplib2.o -c $(SRC_PATH_F90)ompplib2.f90
 
@@ -223,8 +226,6 @@ $(OBJ_PATH)antenna.o : $(SRC_PATH_F90)antenna.f90
 $(OBJ_PATH)input.o : $(SRC_PATH_F90)input.f90
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)input.o -c $(SRC_PATH_F90)input.f90
 
-$(OBJ_PATH)upic-params.o : $(SRC_PATH_F90)upic-params.f90
-	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-params.o -c $(SRC_PATH_F90)upic-params.f90
 
 $(OBJ_PATH)upic-emma.o : $(SRC_PATH_F90)upic-emma.f90 $(ESMODS) $(EMMODS) $(OBJ_PATH)mppmod2.o $(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o $(OPENPMD_PATH)/parallel_class.o $(OPENPMD_PATH)/hdf5io_class.o
 	$(MPIFC) $(OPTSF90) -I$(OPENPMD_PATH) -o $(OBJ_PATH)upic-emma.o -c $(SRC_PATH_F90)upic-emma.f90

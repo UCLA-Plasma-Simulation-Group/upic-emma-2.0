@@ -722,16 +722,16 @@
 	  end if
 !
 ! test case : generate a 2D-cylidrical EM wave generated from x1,y1 < x,y < x2,y2
-      cutot = 0.
-      qtot  = 0.
-      ! centered case :
-      x1 = 63.
-      x2 = 65.
-      y1 = 63.
-      y2 = 65.
-      cu0    = -1.e1
-      v0     = 1.e-3 / ci
-      n0     = - cu0/v0 
+!     cutot = 0.
+!     qtot  = 0.
+!     ! centered case :
+!     x1 = 255.
+!     x2 = 257.
+!     y1 = 255.
+!     y2 = 257.
+!     cu0    = -1.e1
+!     v0     = 1.e-3 / ci
+!     n0     = - cu0/v0 
 
 ! pulse to check dispersion
 !     if (phtime .lt. 0.1) then 
@@ -747,7 +747,7 @@
 !           end do
 !     end do
 !     end if
-! point charge in space + time 
+!  point charge in space + time 
 
 ! Add laser pulse fields in real space
         if ((phtime >= tlaunch) .and. laserpulse) then
