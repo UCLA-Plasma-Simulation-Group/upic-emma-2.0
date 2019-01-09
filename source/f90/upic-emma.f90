@@ -142,6 +142,7 @@
 ! declare arrays for OpenMP code
 ! ppart = tiled macro electron array
       real, dimension(:,:,:), allocatable :: ppart
+      real, dimension(idimp,10,1) :: ppart_test
 ! kpic = number of macro electrons in each tile
       integer, dimension(:), allocatable :: kpic
 ! ncl = number of macro electrons departing tile in each direction
@@ -302,8 +303,8 @@
       A_ion      = atomic_weight
       Z_ion      = ionization_state
       de         = den_me
-      npx        = int(sqrt(Npic)*(2**indx))
-      npy        = int(sqrt(Npic)*(2**indy)) 
+      npx        = int((NpicX)*(2**indx))
+      npy        = int((NpicY)*(2**indy)) 
       dphtime    = Delta_t_diag
       store_cond = .false.
       select case (units)
@@ -348,6 +349,9 @@
 ! initialize scalars for standard code
 ! np = total number of particles in simulation
       np =  dble(npx)*dble(npy)
+      if (test_charge)
+          np = np + 1
+      endif
 ! nx/ny = number of grid points in x/y direction
       nx = 2**indx; ny = 2**indy; nxh = nx/2; nyh = max(1,ny/2)
       nxe = nx + 2; nye = ny + 2; nxeh = nxe/2; nnxe = ndim*nxe
