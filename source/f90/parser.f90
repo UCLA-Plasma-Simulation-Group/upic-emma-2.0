@@ -11,8 +11,8 @@
 ! L5EXPR  = L6EXPR (L6OPR L6EXPR)*
 ! L6EXPR  = term (L7OPR L6EXPR)*
 ! term    = func / brt / var / num
-! brt     = '(' Opexpr ')'
-! func    = ~"[a-z A-Z _]+(([0-9]*)([a-z A-Z _]*))*" '(' Opexpr (',' Opexpr)* ')'
+! brt     = '(' L0EXPR ')'
+! func    = ~"[a-z A-Z _]+(([0-9]*)([a-z A-Z _]*))*" '(' L0EXPR (',' L0EXPR)* ')'
 ! var     = ~"[a-z A-Z _]+[0-9]+"
 ! num     = ~"[\-+]?([0-9]*)?(\.)?([0-9]*)?([dDeE][\-+]?[0-9]+)?"
 ! L1OPR   = '||'
@@ -29,6 +29,8 @@
 ! optimizations when compiling (for example, common subexpression elimination, branch
 ! elimination, constant folding. Even maybe expression simplication)
 
+! this module can be tested alone by uncomenting the main routine at the end of this file
+
 module m_rvm
     implicit none
     private
@@ -38,9 +40,12 @@ module m_rvm
     integer, parameter          :: MAX_LEN_VAR = 8  ! maximum length of the name of variable
     integer, parameter          :: MAX_NUM_OPRD = 4  ! maximum number of operands in one instruction
     integer, parameter          :: NUM_FUNCTIONS= 31  ! number of buildin functions
+    integer, parameter          :: NUM_OPRS = 16  ! number of buildin operators
     integer, parameter          :: NUM_RULES = 8  ! number of nonterminal rules
     integer, parameter          :: NUM_CONSTANT = 4 ! number of contants
-    logical, parameter          :: DEBUG = .false., DEBUG_VERBOSE = .false.
+    logical, parameter          :: DEBUG = .true.  ! enable debuging
+    logical, parameter          :: DEBUG_VERBOSE = .false.  ! more debug info
+    logical, parameter          :: DEBUG_RVM = .true.  ! VM status for human reader
 
     !---------------------------------------------------------------------------------------------------
     !===================================================================================================
@@ -168,6 +173,14 @@ module m_rvm
                                   t_constant('e            ', 2.718281828459045235360287471_p_k_parse ), &
                                   t_constant('true         ', 1.0_p_k_parse                           ), &
                                   t_constant('false        ', 0.0_p_k_parse                           ) /)
+
+   type(t_buildin), dimension(NUM_OPRS), parameter :: operators = (/ op_noop, op_or, op_and, op_not, op_le, op_lt, &
+       op_ge, op_gt, op_eq, op_ne, op_plus, op_minus, op_mul, op_div, op_mod, op_pow /)
+
+
+
+
+
 
     interface setup
         module procedure setup_parser
@@ -611,7 +624,7 @@ module m_rvm
 
 
 !----------------------------------------------------------------------------------------------------------
-! func    = ~"[a-z A-Z _]+(([0-9]*)([a-z A-Z _]*))*" '(' Opexpr (',' Opexpr)* ')'
+! func    = ~"[a-z A-Z _]+(([0-9]*)([a-z A-Z _]*))*" '(' L0EXPR (',' L0EXPR)* ')'
 !----------------------------------------------------------------------------------------------------------
     recursive subroutine func(this, stat)
         implicit none
@@ -670,7 +683,7 @@ module m_rvm
     end subroutine
 
 !----------------------------------------------------------------------------------------------------------
-! brt     = '(' Opexpr ')'
+! brt     = '(' L0EXPR ')'
 !----------------------------------------------------------------------------------------------------------
     recursive subroutine bracket(this, stat)
         implicit none
@@ -814,15 +827,46 @@ module m_rvm
         real(p_k_parse)   :: eval_parser
 
         !local
-        integer :: i
+        integer :: i, j, k, iw, flag
         integer, dimension(ILEN) :: inst
         ! copy variable to register
         if (DEBUG) print*, '========================= INSTRUCTIONS =========================='
         this%reg(1:this%nvar) = var(1:this%nvar)
         do i = 1, this%ip
-            if (DEBUG_VERBOSE) print*, this%reg(1:this%rp)
-            if (DEBUG) print*, '>->',  this%inst(:, i)
             inst = this%inst(:, i)
+
+            if (DEBUG) print*, '>->',  inst
+            if (DEBUG_RVM) then
+                write(*,'(a)',advance="no") 'reg:'
+                do j = 1, this%rp
+                    write(*,'(a,I0,a,F0.6)',advance="no")  ' [', j, ']', this%reg(j)
+                enddo
+                print*, ''
+                flag = 0
+                do j = 1, NUM_OPRS
+                    if ( inst(1) == operators(j)%id ) then
+                        flag = 1
+                        iw = index(operators(j)%name, ' ')
+                        write(*,'(a,I0,a,F0.6,a,F0.6)',advance="no") '(*executing*)  reg[', inst(2), &
+                            & '] = ', this%reg(inst(3)), operators(j)%name(1:iw), this%reg(inst(4))
+                    endif
+                    if ( flag == 1 ) exit
+                enddo
+                do j = 1, NUM_FUNCTIONS
+                    if ( flag == 1 ) exit
+                    if ( inst(1) == functions(j)%id ) then
+                        flag = 1
+                        iw = index(functions(j)%name, ' ')
+                        write(*,'(a,I0,a,a,a)',advance="no") '(*executing*)  reg[', inst(2), &
+                            & '] = ', functions(j)%name(1:iw), '('
+                        do k = 3, functions(j)%n_operands + 1
+                            write(*,'(F0.6,a)',advance="no") this%reg(inst(k)), ','
+                        enddo
+                        write(*,'(F0.6,a)',advance="no"), this%reg(inst(functions(j)%n_operands+2)), ')'
+                    endif
+                enddo
+            endif
+
             select case(this%inst(1, i))
             case(op_plus%id)
                 this%reg(inst(2)) =  this%reg(inst(3)) + this%reg(inst(4))
@@ -1007,6 +1051,9 @@ module m_rvm
             case default
                 if (this%inst(1,i) < flag_load) call handle_error(this, inst, (/ err_runtime, 0 /))
             end select
+            if ( DEBUG_RVM ) then
+                write(*,'(a,F0.6)',advance="yes"), ' =', this%reg(inst(2))
+            endif
         enddo
         eval_parser = this%reg(this%inst(2, i-1))
     end function
@@ -1089,7 +1136,7 @@ end module
 !    call test('+2^2.0^3.0', (/'x1'/), (/2.1/))  ! should be 2^8 = 256
 !    call test('-2 + x**y * pi', (/'x', 'y'/), (/2.0, 8./))
 !    call test('1+x1+2', (/'x1'/), (/0.9/))
-!    call test('if(x>0, max3(x, y, 10), (x-y)/10)', (/'x', 'y'/), (/1.0, 2.0/))
+!    call test('if(x>0, max3(x, y, 10), atan(x-y)/10)', (/'x', 'y'/), (/1.0, 2.0/))
 !    call test('x1>0', (/'x1'/), (/0.9/)) ! this is not allowed
 !
 !    contains
@@ -1105,7 +1152,8 @@ end module
 !        integer :: ierr
 !        call setup(parser, str, varname, ierr)
 !        res = eval(parser, real(var, p_k_parse))
-!        print*, res
+!        print*, 'result = ', res
+!        print*, ''
 !        call delete(parser)
 !    end subroutine test
 !
