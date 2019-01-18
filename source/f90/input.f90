@@ -181,17 +181,17 @@ module input
 
 ! Test charge (Jan. 2019):
 			case ('#q_test')
-			     q_test = get_line(str(istr+1:))
+			     q_test = get_real(str(istr+1:))
 		    case ('#x1_test')
-			     x1_test = get_line(str(istr+1:))
+			     x1_test = get_real(str(istr+1:))
 			case ('#x2_test')
-			     x2_test = get_line(str(istr+1:))
+			     x2_test = get_real(str(istr+1:))
 			case ('#p1_test')
-			     p1_test = get_line(str(istr+1:))
+			     p1_test = get_real(str(istr+1:))
 			case ('#p2_test')
-			     p2_test = get_line(str(istr+1:))
+			     p2_test = get_real(str(istr+1:))
 		    case ('#p3_test')
-			     p3_test = get_line(str(istr+1:))          
+			     p3_test = get_real(str(istr+1:))          
 		end select
 		end do read
 		close(1)

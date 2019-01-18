@@ -142,7 +142,7 @@
 ! declare arrays for OpenMP code
 ! ppart = tiled macro electron array
       real, dimension(:,:,:), allocatable :: ppart
-      real, dimension(idimp,10,1) :: ppart_test
+      real, dimension(:,:,:), allocatable :: ppart_test
 ! kpic = number of macro electrons in each tile
       integer, dimension(:), allocatable :: kpic
 ! ncl = number of macro electrons departing tile in each direction
@@ -313,15 +313,15 @@
       		vtx = ptx
       		vty = pty
       		vtz = ptz
-      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      		else
-      			vtx = vtx
-      			vty = vty
-      			vtz = vtz
-      		end if
+      		! if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
+      		!	vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      		!	vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      		!	vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      		! else
+      		!	vtx = vtx
+      		!	vty = vty
+      		!	vtz = vtz
+      		! end if
       		vx0 = px0
       		vy0 = py0
       		vz0 = pz0
@@ -330,15 +330,6 @@
       		vtx = ptx
       		vty = pty
       		vtz = ptz
-      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vty = vty * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vtz = vtz * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      		else
-      			vtx = vtx * param
-      			vty = vty * param
-      			vtz = vtz * param
-      		end if
       		vx0 = px0
       		vy0 = py0
       		vz0 = pz0
@@ -349,7 +340,7 @@
 ! initialize scalars for standard code
 ! np = total number of particles in simulation
       np =  dble(npx)*dble(npy)
-      if (test_charge)
+      if (test_charge) then
           np = np + 1
       endif
 ! nx/ny = number of grid points in x/y direction
@@ -586,6 +577,7 @@
       nbmaxp = 0.25*mx1*npbmx
       allocate(ppart(idimp,nppmx0,mxyp1))
       allocate(ncl(8,mxyp1),ihole(2,ntmaxp+1,mxyp1))
+      allocate(ppart_test(idimp,10,1))
 !
 ! copy ordered macro electrons data for OpenMP
       call mpmovin2(part,ppart,kpic,npp,noff,mx,my,mx1,delta,irc)
