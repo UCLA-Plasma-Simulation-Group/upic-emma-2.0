@@ -43,9 +43,9 @@ module m_rvm
     integer, parameter          :: NUM_OPRS = 16  ! number of buildin operators
     integer, parameter          :: NUM_RULES = 8  ! number of nonterminal rules
     integer, parameter          :: NUM_CONSTANT = 4 ! number of contants
-    logical, parameter          :: DEBUG = .true.  ! enable debuging
+    logical, parameter          :: DEBUG = .false.  ! enable debuging
     logical, parameter          :: DEBUG_VERBOSE = .false.  ! more debug info
-    logical, parameter          :: DEBUG_RVM = .true.  ! VM status for human reader
+    logical, parameter          :: DEBUG_RVM = .false.  ! VM status for human reader
 
     !---------------------------------------------------------------------------------------------------
     !===================================================================================================
