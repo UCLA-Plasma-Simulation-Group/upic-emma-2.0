@@ -123,7 +123,7 @@ module input
 			case ('#NpicX')
 				NpicX = get_real(str(istr+1:))
 			case ('#NpicY')
-			
+				NpicY = get_real(str(istr+1:))
 			case ('#ptx')
 				ptx = get_real(str(istr+1:))
 			case ('#pty')
