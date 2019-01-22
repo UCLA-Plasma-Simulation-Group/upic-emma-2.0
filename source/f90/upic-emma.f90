@@ -354,7 +354,7 @@
       volume = delta(1) * delta(2) * 1.
       affp = affp*volume
 ! Modification of affp for higher than 1 electron per macro electron ( M Touati )
-	  affp = affp / de
+	  affp = affp / den_me
 ! Real and macro particles masses and charges ( M. Touati )
 	  qme_real = - 1.
 	  qme      = de * qme_real
@@ -540,8 +540,21 @@
       write(*,*)'vtx,vty,vtz=',vtx,vty,vtz
       write(*,*)'vx0,vy0,vz0=',vx0,vy0,vz0
       write(*,*)' before call '
-      call mpdistr2h(relativity,me_real,ci,part,edges,npp,nps,vtx,vty,vtz,vx0,vy0,vz0,npx,npy,&
-     		        &nx,ny,ipbc,x,y,density_x,density_y,ierr)
+! test charge
+! 
+      npp = 0
+      if(idproc .eq. 0) then
+          part(1,1) = delta(1) * nx /2.0
+          part(2,1) = delta(2) * nyp/4.0
+          part(3,1) = 0.0
+          part(4,1) = 100.0
+          part(5,1) = 0.0
+          npp = 1
+          ierr = 0
+      end if
+      write(*,*) part(1,1),part(2,1),part(3,1),part(4,1),part(5,1)
+      ! call mpdistr2h(relativity,me_real,ci,part,edges,npp,nps,vtx,vty,vtz,vx0,vy0,vz0,npx,npy,&
+      !		        &nx,ny,ipbc,x,y,density_x,density_y,ierr)
       write(*,*)'initialize electrons -- done '
 ! check for macro electrons initialization error
       if (ierr /= 0) then
@@ -705,17 +718,107 @@
         cutot = cutot + cui
         qtot  = qtot  + qi
       end if
-      	if (store_cond) then
-        	call DIAG_REAL_MOMENTS(N_rho, N_jx, N_jy , N_jz, nyp, nx, nxe, nypmx,&
-                               de, phtime, yp, x, qtot, cutot, tdiag)
-        	if (movion) then
-        		call DIAG_REAL_MOMENTS(N_rho_ele, N_jex, N_jey , N_jez, nyp, nx, nxe, nypmx,&
-                               de, phtime, yp, x, qe, cue, tdiag)
-            	call DIAG_REAL_MOMENTS(N_rho_ion, N_jix, N_jiy , N_jiz, nyp, nx, nxe, nypmx,&
-                               de, phtime, yp, x, qi, cui, tdiag)
-        	end if
-      	end if
-	  end if
+
+      if (store_cond) then
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = qe(ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='\rho', filenamebase = 'currents',  &
+     &   filepath='e-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+      do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = cue(1,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jx', filenamebase = 'currents',  &
+     &   filepath='e-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+      do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = cue(2,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jy', filenamebase = 'currents',  &
+     &   filepath='e-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = cue(3,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jz', filenamebase = 'currents',  &
+     &   filepath='e-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+      if (movion) then 
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = qi(ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='\rho', filenamebase = 'currents',  &
+     &   filepath='i-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+      do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = cue(1,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jx', filenamebase = 'currents',  &
+     &   filepath='i-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+      do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = cue(2,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jy', filenamebase = 'four-currents',  &
+     &   filepath='i-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+         do ix=1,nx
+             do iy=1,nyp
+                 sfield(ix,iy) = cue(3,ix,iy)
+              end do
+         end do
+         call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
+     &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jz', filenamebase = 'currents',  &
+     &   filepath='i-CURRENT/' )
+!    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
+!    &   position=(/0.0,0.0/))
+         call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
+      end if ! (movion)
+      end if ! (store_cond)
+
+      end if
 !
 ! test case : generate a 2D-cylidrical EM wave generated from x1,y1 < x,y < x2,y2
 !     cutot = 0.
