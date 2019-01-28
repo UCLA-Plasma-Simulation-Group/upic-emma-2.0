@@ -917,10 +917,12 @@
          isign = -1
          call wmpfft2rn(amu,amut,noff,nyp,isign,mixup,sct,tfft,tfmov,   &
      &indx,indy,kstrt,nvp,kyp,ny,nterf,ierr)
-         deallocate(amu)
+         
          call mpdcuperp2(dcut,amut,tfield,nx,ny,kstrt,kx,ky)
-         deallocate(amut)
+         
          call mpetfield2(dcut,exyz,ffc,affp,ci,wf,tfield,nx,ny,kstrt)
+         deallocate(amu)
+         deallocate(amut)
          deallocate(dcut)
          dth = 0.5*dt
 ! initialize pml fields in case of absorbing boundary conditions
