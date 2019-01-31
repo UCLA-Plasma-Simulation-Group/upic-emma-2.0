@@ -152,10 +152,10 @@
 !
 !-----------------------------------------------------------------------
 !      subroutine mpcuperp2(cu,tfield,nx,ny,kstrt)                             ! M. Touati
-      subroutine mpcuperp2(cu,FTFD,tfield,nx,ny,kstrt,kx,ky)                   ! M. Touati
+      subroutine mpcuperp2(cu,FDTD,tfield,nx,ny,kstrt,kx,ky)                   ! M. Touati
 ! calculates the transverse current in fourier space
       implicit none
-      integer, intent(in) :: nx, ny, kstrt, FTFD
+      integer, intent(in) :: nx, ny, kstrt, FDTD
       real, intent(inout) :: tfield
       complex, dimension(:,:,:), intent(inout) :: cu
       real, dimension(:), intent(in) :: kx, ky                                 ! M. Touati
@@ -169,7 +169,7 @@
       call dtimer(dtime,itime,-1)
 ! call low level procedure
 !      call MPPCUPERP2(cu,nx,ny,kstrt,nyv,kxp)                                 ! M. Touati
-	  if (FTFD==0) then
+	  if (FDTD==0) then
       	call MPPCUPERP2(cu,nx,ny,kstrt,nyv,kxp,kx,ky)                          ! M. Touati
       else
       	call MPPCUPERP2YEE(cu,nx,ny,kstrt,nyv,kxp,kx,ky)                       ! M. Touati      
@@ -244,19 +244,20 @@
 !-----------------------------------------------------------------------
 !      subroutine mpmaxwel2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,tfield,nx,ny,&
 !     &kstrt)                                                                  ! M. Touati
-      subroutine mpmaxwel2(exy,bxy,FTFD,exy_corr,bxy_corr,cu,ffc,            &
+!23456789*123456789*123456789*123456789*123456789*123456789*123456789*123456
+      subroutine mpmaxwel2(exy,bxy,FDTD,exy_corr,bxy_corr,cu,ffc,       &
      &                  affp,ci,dt,wf,wm,tfield,nx,ny,kstrt,kx,ky,ax,ay)       ! M. Touati
 ! solves 2-1/2d maxwell's equation for unsmoothed transverse electric
 ! and magnetic fields
       implicit none
-      integer, intent(in)                      :: nx, ny, kstrt, FTFD
+      integer, intent(in)                      :: nx, ny, kstrt, FDTD
       real, intent(in)                         :: affp, ci, dt, ax, ay
       real, intent(inout)                      :: wf, wm, tfield
       complex, dimension(:,:,:), intent(inout) :: exy, bxy
       complex, dimension(:,:), intent(inout)   :: exy_corr, bxy_corr
       complex, dimension(:,:,:), intent(in)    :: cu
       complex, dimension(:,:), intent(in)      :: ffc
-      real, dimension(:), intent(in)           :: kx, ky                       ! M. Touati
+      real, dimension(:), intent(in)           :: kx, ky                       
 ! local data
       integer :: nyv, kxp, nyhd
       integer, dimension(4) :: itime
@@ -267,17 +268,28 @@
 ! initialize timer
       call dtimer(dtime,itime,-1)
 ! call low level procedure
-!      call MPPMAXWEL2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,  &
-!     &kxp,nyhd)                                                               ! M. Touati
-	  if (FTFD == 0) then
-      call MPPMAXWEL2(exy,bxy,cu,ffc,                &
-                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
-      else if (FTFD > 0) then
-      call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,                &
-                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      ! M. Touati
+!      call MPPMAXWEL2(exy,bxy,cu,ffc,affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,   &
+!     &kxp,nyhd)                                                               
+	  if (FDTD == 0) then
+! old leap-frog
+!23456789*123456789*123456789*123456789*123456789*123456789*123456789*123456
+!      call MPPMAXWEL2(exy, bxy, exy_corr, bxy_corr, cu, ffc,             &
+!    &      affp,ci,                                                      &
+!     &     dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)      
+!23456
+! new PSATD
+      call MPPMAXWEL2_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,             &
+                    affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
+      else if (FDTD > 0) then
+! old leap-frog in time, center difference in space
+      call MPPMAXWEL2YEE(exy,bxy,exy_corr,bxy_corr,cu,ffc,               &
+                   affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
+! new PSATD
+!     call MPPMAXWEL2YEE_PSATD(exy,bxy,exy_corr,bxy_corr,cu,ffc,          &
+!                  affp,ci,dt,wf,wm,nx,ny,kstrt,nyv,kxp,nyhd,kx,ky,ax,ay)     
       else
-      	print*,'FTFD < 0 not supported'
-      	stop
+      	  write(*,*) 'FDTD < 0 not supported'
+      	  stop
       end if
 ! record time
       call dtimer(dtime,itime,1)
@@ -285,11 +297,11 @@
       end subroutine
 !
 !-----------------------------------------------------------------------    
-      subroutine mpemfield2(fxy,exy,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+      subroutine mpemfield2(fxy,exy,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
 ! adds and smooths or copies and smooths complex vector fields in
 ! fourier space
       implicit none
-      integer, intent(in) :: FTFD, isign, nx, ny, kstrt
+      integer, intent(in) :: FDTD, isign, nx, ny, kstrt
       real, intent(inout) :: tfield
       complex, dimension(:,:,:), intent(inout) :: fxy
       complex, dimension(:,:,:), intent(in) :: exy
@@ -306,7 +318,7 @@
 ! initialize timer
       call dtimer(dtime,itime,-1)
 ! call low level procedure
-      if (FTFD == 0) then
+      if (FDTD == 0) then
       	call MPPEMFIELD2(fxy,exy,ffc,isign,nx,ny,kstrt,nyv,kxp,nyhd)
       else
       	call MPPEMFIELD2YEE(fxy,exy,ffc,isign,kx,ky,ax,ay,nx,ny,kstrt,nyv,kxp,nyhd)

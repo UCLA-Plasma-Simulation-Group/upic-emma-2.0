@@ -14,7 +14,7 @@
 #                 memory)                                             #
 #                 if N_threads=0, the maximum possible value is used  #
 #                                                                     #
-# FTFD          = 0 for solving Maxwell eq. with the full spectral    #
+# FDTD          = 0 for solving Maxwell eq. with the full spectral    #
 #                   solver                                            #
 #              or N for emulating a Finite Time Finite Difference Yee #
 #                 scheme with an acuracy order N; in this case,       #
@@ -84,29 +84,29 @@
 #                                                                     #
 #######################################################################
 #
-#N_threads  4
+#N_threads  2
 #
-#FTFD 0
+#FDTD 0
 #
-#cfl 0.95
+#cfl 1.4
 #
 #relativistic .true.
 #
 #moving_ions .false.
 #
-#laserpulse  .false.
+#laserpulse  .true.
 #
-#plasma .true.
+#plasma .false.
 #
 #Delta_x 1.0
 #
 #Delta_y 1.0
 #
-#indx 11
+#indx 9
 #
-#indy 2
+#indy 9
 #
-#t_end  3000.
+#t_end  500.
 #
 #units EM
 #
@@ -154,9 +154,9 @@
 ##ay  0.
 #ay .912871
 #
-#den_me  1
+#den_me  0.01
 #
-#Npic    256
+#Npic    1.
 #
 #param 1.
 #
@@ -226,13 +226,13 @@
 #
 #theta 0.
 #
-#polardir 0.
+#polardir 1.
 #
 #shape 0
 #
 #tlaunch 0.
 #
-#FWHMt 1000.
+#FWHMt 0.
 #
 #xfocal 64.
 #
@@ -242,7 +242,7 @@
 #
 #omega0 0.5
 #
-#a0 1.00
+#a0 0.
 #
 #######################################################################
 #                       Boundary conditions                           #
@@ -277,7 +277,7 @@
 #
 #L_PML 10.
 #
-#n_cond_PML 3.2
+#n_cond_PML 3.5
 #
 #######################################################################
 #                            Diagnostics :                            #
@@ -290,8 +290,7 @@
 #######################################################################
 #
 
-
-#Delta_t_diag 10.
+#Delta_t_diag 50.
 #######################################################################
 #                        density profile :                            #
 #######################################################################
@@ -304,6 +303,5 @@
 #######################################################################
 #
 
-
-#density_x 1
-#density_y 1
+#density_x 0.00001
+#density_y 0.00001

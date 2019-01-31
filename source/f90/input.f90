@@ -9,12 +9,13 @@ module input
 !=====================================================================================
 ! Simulation options :
 		integer, public          :: N_threads
-		integer, public          :: FTFD
+		integer, public          :: FDTD
 		real, public             :: cfl
 		logical, public          :: relativistic
 		logical, public          :: moving_ions
 		logical, public          :: laserpulse
 		logical, public          :: plasma
+		logical, public          :: test_charge
 		real, public             :: delta_x
 		real, public             :: delta_y
       	integer, public          :: indx
@@ -28,7 +29,7 @@ module input
 		real, public             :: param
 		real, public             :: ax, ay
 		real, public             :: den_me
-		real, public             :: Npic
+		real, public             :: NpicX,NpicY
 		real, public             :: ptx, pty, ptz
 		real, public             :: px0, py0, pz0
 ! Laser pulse properties
@@ -49,6 +50,11 @@ module input
 		real, public             :: Delta_t_diag		
 ! density
         character(len=2048), public :: density_x, density_y
+! test charge
+        real, public 			:: q_test,x1_test,x2_test
+        real, public			:: p1_test,p2_test,p3_test
+        
+        
 
 	contains
 
@@ -75,8 +81,8 @@ module input
 ! Simulation options :
 			case ('#N_threads')
 				N_threads = get_integer(str(istr+1:))
-			case ('#FTFD')
-				FTFD = get_integer(str(istr+1:))
+			case ('#FDTD')
+				FDTD = get_integer(str(istr+1:))
 			case ('#cfl')
 				cfl = get_real(str(istr+1:))
 			case ('#laserpulse')  
@@ -114,8 +120,10 @@ module input
 				ax = get_real(str(istr+1:))
 			case ('#ay')
 				ay = get_real(str(istr+1:))
-			case ('#Npic')
-				Npic = get_real(str(istr+1:))
+			case ('#NpicX')
+				NpicX = get_real(str(istr+1:))
+			case ('#NpicY')
+			
 			case ('#ptx')
 				ptx = get_real(str(istr+1:))
 			case ('#pty')
@@ -170,6 +178,20 @@ module input
 				density_x = get_line(str(istr+1:))
 			case ('#density_y')
 				density_y = get_line(str(istr+1:))
+
+! Test charge (Jan. 2019):
+			case ('#q_test')
+			     q_test = get_real(str(istr+1:))
+		    case ('#x1_test')
+			     x1_test = get_real(str(istr+1:))
+			case ('#x2_test')
+			     x2_test = get_real(str(istr+1:))
+			case ('#p1_test')
+			     p1_test = get_real(str(istr+1:))
+			case ('#p2_test')
+			     p2_test = get_real(str(istr+1:))
+		    case ('#p3_test')
+			     p3_test = get_real(str(istr+1:))          
 		end select
 		end do read
 		close(1)

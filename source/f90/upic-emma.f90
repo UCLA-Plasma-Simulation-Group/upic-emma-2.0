@@ -16,7 +16,7 @@
 ! -> New module :: input.f90
 ! Finite Time and Arbitrary Order Spatial Finite Difference Scheme implemented
 ! by Michael J. Touati, UCLA, 2016, October
-! -> New module FTFDfield2.f90
+! -> New module FDTDfield2.f90
       program upic_emma
       use upic_m_parameters
       use modmpinit2
@@ -142,6 +142,7 @@
 ! declare arrays for OpenMP code
 ! ppart = tiled macro electron array
       real, dimension(:,:,:), allocatable :: ppart
+      real, dimension(:,:,:), allocatable :: ppart_test
 ! kpic = number of macro electrons in each tile
       integer, dimension(:), allocatable :: kpic
 ! ncl = number of macro electrons departing tile in each direction
@@ -302,8 +303,8 @@
       A_ion      = atomic_weight
       Z_ion      = ionization_state
       de         = den_me
-      npx        = int(sqrt(Npic)*(2**indx))
-      npy        = int(sqrt(Npic)*(2**indy)) 
+      npx        = int((NpicX)*(2**indx))
+      npy        = int((NpicY)*(2**indy)) 
       dphtime    = Delta_t_diag
       store_cond = .false.
       select case (units)
@@ -312,15 +313,15 @@
       		vtx = ptx
       		vty = pty
       		vtz = ptz
-      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      		else
-      			vtx = vtx
-      			vty = vty
-      			vtz = vtz
-      		end if
+      		! if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
+      		!	vtx = vtx * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      		!	vty = vty * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      		!	vtz = vtz * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
+      		! else
+      		!	vtx = vtx
+      		!	vty = vty
+      		!	vtz = vtz
+      		! end if
       		vx0 = px0
       		vy0 = py0
       		vz0 = pz0
@@ -329,15 +330,6 @@
       		vtx = ptx
       		vty = pty
       		vtz = ptz
-      		if (((vtx**2.)+(vty**2.)+(vtz**2.)) .ne. 3. ) then
-      			vtx = vtx * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vty = vty * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      			vtz = vtz * param * sqrt(3. / ((ptx**2.)+(pty**2.)+(ptz**2.)))
-      		else
-      			vtx = vtx * param
-      			vty = vty * param
-      			vtz = vtz * param
-      		end if
       		vx0 = px0
       		vy0 = py0
       		vz0 = pz0
@@ -348,6 +340,9 @@
 ! initialize scalars for standard code
 ! np = total number of particles in simulation
       np =  dble(npx)*dble(npy)
+      if (test_charge) then
+          np = np + 1
+      endif
 ! nx/ny = number of grid points in x/y direction
       nx = 2**indx; ny = 2**indy; nxh = nx/2; nyh = max(1,ny/2)
       nxe = nx + 2; nye = ny + 2; nxeh = nxe/2; nnxe = ndim*nxe
@@ -506,15 +501,19 @@
       allocate(cuf(ndim,modesyd,modesxpd))
       allocate(exyzf(ndim,modesyd,modesxpd))
       allocate(bxyzf(ndim,modesyd,modesxpd))
-! Time step : dt < 2 / (k_max c) with k_max = pi * sqrt( (1/delta)^2 + (1/delta)^2 )
-      dt = cfl*0.45*ci ! (sqrt(2)/pi = 0.45...)      
-      dt = cfl*sqrt(dx*dx+dy*dy)*ci ! (sqrt(2)/pi = 0.45...)      
-! Modification of the CFL condition for non square cells ( M Touati )
-      dt = dt / sqrt(0.5*((1./delta(1)**2.)+(1./delta(2)**2.)))
+! Time step : dt < 2 / (k_max c) with k_max = pi * sqrt( (1/delta)^2 + (1/delta)^2 )  -- spectral
+!             dt < 1 / c sqrt( ... ) -- FDTD
+      if(FDTD .eq. 0) then
+          dt = cfl*0.636619772*ci ! (2/pi = 0.636619772)      
+      else
+          dt = cfl * ci
+      endif
+! Modification of the CFL condition for non square cells ( )
+      dt = dt / sqrt(((1./delta(1)**2.)+(1./delta(2)**2.)))
 ! Allocate pml arrays and set up coefficients needed to computed the PML equations and
 ! modification of the CFL condition for solving the PML equations
 	  if ((BCx == 0) .or. (BCy == 0)) then
-	  	  call setup_pml(sigma,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	  	  call setup_pml(sigma,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	  	                 ax,ay,dt,x,yp,delta,L_PML,n_cond_PML,ci,&
 	                     nx,ny,nxe,nye,BCx,BCy,nyp,nypmx,kxp,nvp,kstrt)
 	  end if  
@@ -528,8 +527,8 @@
       call mpfft2_init(mixup,sct,indx,indy)
 ! Emulation of a Finite Time Finite Difference Yee Scheme
       stencil = 0
-      if (FTFD .ge. 2) then
-      	stencil = floor(FTFD/2.)
+      if (FDTD .ge. 2) then
+      	stencil = floor(FDTD/2.)
       	call setup_bracket(stencil,nx,ny,delta,kx,ky)
       end if
 ! calculate form factors
@@ -578,6 +577,7 @@
       nbmaxp = 0.25*mx1*npbmx
       allocate(ppart(idimp,nppmx0,mxyp1))
       allocate(ncl(8,mxyp1),ihole(2,ntmaxp+1,mxyp1))
+      allocate(ppart_test(idimp,10,1))
 !
 ! copy ordered macro electrons data for OpenMP
       call mpmovin2(part,ppart,kpic,npp,noff,mx,my,mx1,delta,irc)
@@ -721,23 +721,29 @@
 !     cutot = 0.
 !     qtot  = 0.
 !     ! centered case :
-!     x1 = 63.
-!     x2 = 65.
-!     y1 = 63.
-!     y2 = 65.
+!     x1 = 255.
+!     x2 = 257.
+!     y1 = 255.
+!     y2 = 257.
 !     cu0    = -1.e1
 !     v0     = 1.e-3 / ci
 !     n0     = - cu0/v0 
+
+! pulse to check dispersion
+!     if (phtime .lt. 0.1) then 
+!     write(*,*)'time=',phtime
 !     do ii=1,nxe
 !           do jj=1,nypmx
 !                 if ( (x(ii)  >= x1) .and. (x(ii)  <= x2)) then 
 !                 if ( (yp(jj) >= y1) .and. (yp(jj) <= y2)) then
-!                       cutot(2,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
+!                       cutot(3,ii,jj) = cu0*sin(omega0*(phtime+0.5*dt))
 !                       wpsrc = wpsrc - (cutot(3,ii,jj)*fxyze(3,ii,jj)*delta(1)*delta(2)*dt)
 !                 end if
 !                 end if
 !           end do
 !     end do
+!     end if
+!  point charge in space + time 
 
 ! Add laser pulse fields in real space
         if ((phtime >= tlaunch) .and. laserpulse) then
@@ -756,8 +762,8 @@
     !           &indy,kstrt,nvp,kyp,ny,nterf,ierr)
     !       ! Filter laser fields and add it to the electromagnetic fields with OpenMP:
          !  isign = 1
-    !       call mpemfield2(exyz,exyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-    !       call mpemfield2(bxyz,bxyzl,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+    !       call mpemfield2(exyz,exyzl,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+    !       call mpemfield2(bxyz,bxyzl,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
 !           exyz = exyz + exyzl
 !           bxyz = bxyz + bxyzl
         end if
@@ -790,7 +796,7 @@
       end if
 !
 ! take transverse part of current with OpenMP: updates cut
-      call mpcuperp2(cut,FTFD,tfield,nx,ny,kstrt,kx,ky)
+      call mpcuperp2(cut,FDTD,tfield,nx,ny,kstrt,kx,ky)
 !
 ! calculate electromagnetic fields in fourier space with OpenMP:
 ! updates exyz, bxyz, wf, wm
@@ -818,7 +824,7 @@
          if (((BCx == 0) .or. (BCy == 0))) then
 			 call mpmaxwel2pml_init(vpml_exyz,vpml_bxyz,vpml_exyz_corr,vpml_bxyz_corr,&
 	  	                            exyz,bxyz,nye,kxp,nyh)
-	  	 else if (FTFD > 0) then
+	  	 else if (FDTD > 0) then
 	  	 	call mpmaxwel2_init(exyz,bxyz,exyz_corr,bxyz_corr,nye,kxp,nyh)
          end if
 ! update electromagnetic fields
@@ -828,11 +834,11 @@
       	 	call mpmaxwel2pml(PML_scheme,ndim,indx,indy,nx,nxe,ny,nye,nyp,nypmx,nxhy,nxyh,nyh,kxp,kyp,&
 	                          nvp,kstrt,noff,BCx,BCy,L_PML,ax,ay,affp,ci,dt,kx,ky,x,yp,delta,sigma,&
 	                          ffc,cut,nterf,ierr,mixup,wm,wf,tfield,tfmov,tguard,&
-	                          tfft,vpml_exyz,vpml_bxyz,FTFD,vpml_exyz_corr,vpml_bxyz_corr,&
+	                          tfft,vpml_exyz,vpml_bxyz,FDTD,vpml_exyz_corr,vpml_bxyz_corr,&
 	  	                      sct,exyz,bxyz,wescx,wescy,wfppml,wmppml,wfpdump,wmpdump)
        	 else
 ! periodic boundary conditions case
-         	call mpmaxwel2(exyz,bxyz,FTFD,exyz_corr,bxyz_corr,cut,ffc,&
+         	call mpmaxwel2(exyz,bxyz,FDTD,exyz_corr,bxyz_corr,cut,ffc,&
          	               affp,ci,dt,wf,wm,tfield,nx,ny,kstrt,kx,ky,ax,ay)
      	 endif
       endif
@@ -851,10 +857,10 @@
 ! add longitudinal and transverse electric fields with OpenMP:
 ! updates fxyt
       isign = 1
-      call mpemfield2(fxyt,exyz,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+      call mpemfield2(fxyt,exyz,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
 ! copy magnetic field with OpenMP: updates bxyt
       isign = -1
-      call mpemfield2(bxyt,bxyz,FTFD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+      call mpemfield2(bxyt,bxyz,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
 ! Diagnostic of electromagnetic fields in Fourier space ( M Touati )
       if (store_cond) then
         call mprdvmodes2(exyz,exyzf,tdiag,nx,ny,modesx,modesy,kstrt)

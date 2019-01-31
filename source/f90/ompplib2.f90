@@ -24,13 +24,14 @@
 ! GRID calculates spatial and spatial frequency grids :
 ! _ for the full simulation box : x, y, kx and ky
 ! _ for each MPI partition : x, yp, kpx and ky
-! written by Michael J. Touati, UCLA, 2016, March
+! 
 
       use modmpsort2
       use modmpfft2
       use modmpgard2
       use mppmod2, only: mpmove2, mpfmove2, mpfnmove2, mpcguard2,       &
      &mpncguard2, mpnaguard2, mpnacguard2
+      use upic_m_parameters
       implicit none
 !
 ! ppbuff = buffer array for reordering tiled particle array
@@ -70,7 +71,7 @@
 ! local data
       integer :: i, j
       real dnx, dny, dnz
-      dnx = 6.28318530717959/real(nx)
+      dnx = p_twopi/real(nx)
       dnx = dnx / delta(1)
       do i = 1, nxe
       	x(i) = real(i-1)*delta(1)
@@ -79,7 +80,7 @@
       do i=1, kxp
       	kpx(i) = kx(i+moff)
       end do
-      dny = 6.28318530717959/real(ny)
+      dny = p_twopi/real(ny)
       dny = dny / delta(2)
       do j = 1, nye
       	y(j) = real(j-1)*delta(2)

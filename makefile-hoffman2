@@ -11,20 +11,20 @@
 #################
 
 #OpenMPI
-MPIFC = mpif90 -fopenmp
-MPICC = mpicc -fopenmp
+MPIFC = mpiifort -qopenmp
+MPICC = mpiicc -qopenmp -free
 
-CC = mpicc
+CC = icc
 
 #OPTSF90 = -O3
-OPTSF90 = -O3 -fdefault-real-8 -fdefault-double-8
+OPTSF90 = -O3 -r8
 #OPTSF90 = -O3 -fcheck=bounds -fdefault-real-8 -fdefault-double-8
 #OPTSF90 = -O3 -fcheck=bounds -fdefault-real-8 -fdefault-double-8 -Wall -std=f95
 #OPTSF90 = -O3 -fcheck=bounds
 #OPTSF90 = -O3 -g -fbacktrace -fcheck=all -Wall
 
 #OPTSF77 = -O3
-OPTSF77 = -O3 -fdefault-real-8 -fdefault-double-8
+OPTSF77 = -O3 -r8
 #OPTSF77 = -O3 -fcheck=bounds -fdefault-real-8 -Wall
 #OPTSF77 = -O1 -g -fbacktrace #-fdefault-real-8 -Wall
 
@@ -68,9 +68,9 @@ MOD_PATH =
 
 TRG_PATH = 
 
-OPENPMD_PATH = ../Fortran-OpenPMD-File-Writers/
-# OPENPMD_PATH = /Users/franktsung/vst-extra/FranksFolder/Work/codes/Fortran-OpenPMD-File-Writers
-HDF_LIBPATH = -L/usr/local/lib -lhdf5_fortran -lhdf5_hl -lhdf5 -lz
+# OPENPMD_PATH = /Users/uclapic/Documents/code-development/Fortran-OpenPMD-File-Writers/
+OPENPMD_PATH = ../Fortran-OpenPMD-File-Writers
+HDF_LIBPATH = -L$(HDF5_LIB) -lhdf5_fortran -lhdf5_hl -lhdf5 -lz
 
 #############
 # shortcuts #
@@ -91,11 +91,11 @@ ESHOBJS = $(addprefix $(OBJ_PATH), libmpinit2_h.o \
 
 EMHOBJS = $(addprefix $(OBJ_PATH), libmpbpush2_h.o libmpcurd2_h.o )
 
-ESMODS = $(addprefix $(OBJ_PATH), rvm.o modprofile2.o modmpinit2.o \
+ESMODS = $(addprefix $(OBJ_PATH), upic-params.o rvm.o modprofile2.o modmpinit2.o \
         modmpsort2.o modmpgard2.o  \
         modmpfft2.o  modmpfield2.o \
         modmpfieldpml2.o antenna.o\
-        diag.o  input.o upic-params.o )
+        diag.o  input.o )
 
 EMMODS = $(addprefix $(OBJ_PATH), modmpbpush2.o modmpcurd2.o )
 
@@ -108,19 +108,19 @@ OPENPMD_MODS = $(OPENPMD_PATH)/parallel_class.o $(OPENPMD_PATH)/hdf5io_class.o
 all : upic-emma clean_mod clean_obj
 
 upic-emma : $(OBJ_PATH)upic-emma.o $(ESOBJS) $(EMOBJS) dtimer.o 
-	$(MPIFC) $(OPTSF90) -o $(TRG_PATH)upic-emma $(OBJ_PATH)upic-emma.o \
+	$(MPIFC) $(HDF_LIBPATH) $(OPTSF90) -o $(TRG_PATH)upic-emma $(OBJ_PATH)upic-emma.o \
 	$(ESOBJS) $(EMOBJS) $(ESMODS) $(EMMODS) \
 	$(OBJ_PATH)mpplib2.o $(OBJ_PATH)mppmod2.o \
 	$(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o \
-	$(ESHOBJS) $(EMHOBJS) $(OPENPMD_MODS) $(HDF_LIBPATH) dtimer.o 
-
-$(OBJ_PATH)upic-params.o : $(SRC_PATH_F90)upic-params.f90
-	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-params.o -c $(SRC_PATH_F90)upic-params.f90
+	$(ESHOBJS) $(EMHOBJS) $(OPENPMD_MODS) dtimer.o 
 
 dtimer.o : $(SRC_PATH_C)dtimer.c
 	$(CC) $(OPTSCC) -c $(SRC_PATH_C)dtimer.c
 
-$(OBJ_PATH)omplib.o : $(SRC_PATH_F90)omplib.f90
+$(OBJ_PATH)upic-params.o : $(SRC_PATH_F90)upic-params.f90
+	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)upic-params.o -c $(SRC_PATH_F90)upic-params.f90
+
+$(OBJ_PATH)omplib.o : $(SRC_PATH_F90)omplib.f90 $(OBJ_PATH)upic-params.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)omplib.o -c $(SRC_PATH_F90)omplib.f90
 
 $(OBJ_PATH)mpplib2.o : $(SRC_PATH_F90)mpplib2.f90
@@ -130,13 +130,13 @@ $(OBJ_PATH)mppmod2.o : $(SRC_PATH_F90)mppmod2.f90 $(OBJ_PATH)mpplib2.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)mppmod2.o -c $(SRC_PATH_F90)mppmod2.f90
 
 $(OBJ_PATH)libmpinit2.o : $(SRC_PATH_F77)libmpinit2.f
-	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpinit2.o -c $(SRC_PATH_F77)libmpinit2.f
+	$(MPIFC) $(OPTSF77) -o $(OBJ_PATH)libmpinit2.o -c $(SRC_PATH_F77)libmpinit2.f
 
 # $(OBJ_PATH)libmppush2.o : $(SRC_PATH_F77)libmppush2.f
 # 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmppush2.o -c $(SRC_PATH_F77)libmppush2.f
 
 $(OBJ_PATH)libmpbpush2.o : $(SRC_PATH_F77)libmpbpush2.f
-	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpbpush2.o -c $(SRC_PATH_F77)libmpbpush2.f
+	$(MPIFC) $(OPTSF77) -o $(OBJ_PATH)libmpbpush2.o -c $(SRC_PATH_F77)libmpbpush2.f
 
 $(OBJ_PATH)libmpcurd2.o : $(SRC_PATH_F77)libmpcurd2.f
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpcurd2.o -c $(SRC_PATH_F77)libmpcurd2.f
@@ -154,7 +154,7 @@ $(OBJ_PATH)libmpfield2.o : $(SRC_PATH_F77)libmpfield2.f
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpfield2.o -c $(SRC_PATH_F77)libmpfield2.f
 	
 $(OBJ_PATH)libmpfieldpml2.o : $(SRC_PATH_F77)libmpfieldpml2.f
-	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpfieldpml2.o -c $(SRC_PATH_F77)libmpfieldpml2.f
+	$(MPIFC) $(OPTSF77) -o $(OBJ_PATH)libmpfieldpml2.o -c $(SRC_PATH_F77)libmpfieldpml2.f
 
 $(OBJ_PATH)libmpinit2_h.o : $(SRC_PATH_F90)libmpinit2_h.f90
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)libmpinit2_h.o -c $(SRC_PATH_F90)libmpinit2_h.f90
@@ -207,10 +207,10 @@ $(OBJ_PATH)modmpgard2.o : $(SRC_PATH_F90)modmpgard2.f90 $(OBJ_PATH)libmpgard2_h.
 $(OBJ_PATH)modmpfft2.o : $(SRC_PATH_F90)modmpfft2.f90 $(OBJ_PATH)libmpfft2_h.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)modmpfft2.o -c $(SRC_PATH_F90)modmpfft2.f90
 
-$(OBJ_PATH)modmpfield2.o : $(SRC_PATH_F90)modmpfield2.f90 $(OBJ_PATH)libmpfield2.o $(OBJ_PATH)libmpfield2_h.o
+$(OBJ_PATH)modmpfield2.o : $(SRC_PATH_F90)modmpfield2.f90 $(OBJ_PATH)libmpfield2_h.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)modmpfield2.o -c $(SRC_PATH_F90)modmpfield2.f90
 
-$(OBJ_PATH)ompplib2.o : $(SRC_PATH_F90)ompplib2.f90 $(OBJ_PATH)upic-params.o $(OBJ_PATH)modmpsort2.o $(OBJ_PATH)modmpfft2.o \
+$(OBJ_PATH)ompplib2.o : $(SRC_PATH_F90)ompplib2.f90 $(OBJ_PATH)modmpsort2.o $(OBJ_PATH)modmpfft2.o \
 	$(OBJ_PATH)modmpgard2.o $(OBJ_PATH)mppmod2.o
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)ompplib2.o -c $(SRC_PATH_F90)ompplib2.f90
 
@@ -225,7 +225,6 @@ $(OBJ_PATH)antenna.o : $(SRC_PATH_F90)antenna.f90
 	
 $(OBJ_PATH)input.o : $(SRC_PATH_F90)input.f90
 	$(MPIFC) $(OPTSF90) -o $(OBJ_PATH)input.o -c $(SRC_PATH_F90)input.f90
-
 
 $(OBJ_PATH)upic-emma.o : $(SRC_PATH_F90)upic-emma.f90 $(ESMODS) $(EMMODS) $(OBJ_PATH)mppmod2.o $(OBJ_PATH)omplib.o $(OBJ_PATH)ompplib2.o $(OPENPMD_PATH)/parallel_class.o $(OPENPMD_PATH)/hdf5io_class.o
 	$(MPIFC) $(OPTSF90) -I$(OPENPMD_PATH) -o $(OBJ_PATH)upic-emma.o -c $(SRC_PATH_F90)upic-emma.f90
