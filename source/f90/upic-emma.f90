@@ -75,17 +75,18 @@
 ! wpsrc = time integrated source of electrical energy in the simulation box per MPI node
       real :: wke = 0.0, we = 0.0, wf = 0.0, wm = 0.0, wt = 0.0, wsrc = 0., wpsrc = 0., wl =0.0
 ! sorting tiles, should be less than or equal to 32
-      integer :: mx = 16, my = 16
+      integer :: mx = 16, my = 1024
 ! fraction of extra particles needed for particle management
       real :: xtras = 0.5 !xtras = 0.2
 ! list = (true,false) = list of particles leaving tiles found in push
       logical :: list = .true.
 ! declare scalars for standard code
-      integer :: n
+      integer :: n,i,j
       integer :: nx, ny, nxh, nyh, nxe, nye, nxeh, nnxe, nxyh, nxhy
       integer :: mx1, ntime, nloop, isign, ierr
       real :: affp, dth, omt, wp0
       double precision :: np
+      
 !
 ! declare scalars for MPI code
       integer :: nvp, idproc, kstrt, npmax, kxp, kyp, nypmx, nypmn
@@ -349,23 +350,36 @@
       nxyh = max(nx,ny)/2; nxhy = max(nxh,ny)
 ! mx1 = number of tiles in x direction
       mx1 = (nx - 1)/mx + 1
-      affp = dble(nx)*dble(ny)/np
+! test charge case
+      np = 1
+      affp = 1.0
+! regular normalization
+!     affp = dble(nx)*dble(ny)/np
+
+
 ! Modification of affp for non square cells ( M Touati )
       volume = delta(1) * delta(2) * 1.
       affp = affp*volume
 ! Modification of affp for higher than 1 electron per macro electron ( M Touati )
-	  affp = affp / den_me
+! original
+!	  affp = affp / den_me
+! test charge --> nothing
+	  
 ! Real and macro particles masses and charges ( M. Touati )
 	  qme_real = - 1.
-	  qme      = de * qme_real
+	  qme      = den_me * qme_real
 	  me_real  = 1.
-	  me       = de * me_real
+	  me       = den_me * me_real
 	  qbme     = qme / me
-	  di       = de / Z_ion
+	  qbme     = 0.0
+	  di       = den_me / Z_ion
 	  qmi_real = Z_ion
 	  qmi      = di * qmi_real
 	  mi_real  = A_ion * Atomic_mass_unit
 	  mi       = di * mi_real
+! test charge
+	  qme      = qme_real
+	  me       = me_real
       qbmi     = qmi / mi
       if (movion) then
         	vtxi = vtx / sqrt(mi_real) ! vtx,y,z are thermal velocities if relativity == 0
@@ -424,7 +438,7 @@
 ! kyp = number of complex grids in each field partition in y direction
       kyp = (ny - 1)/nvp + 1
 ! npmax = maximum number of electrons in each partition
-      npmax = (np/nvp) * part_factor
+      npmax = (np/nvp) * part_factor + 100
 ! myp1 = number of tiles in y direction
       myp1 = (nyp - 1)/my + 1; mxyp1 = mx1*myp1
 ! nterf = number of shifts required by field manager (0=search)
@@ -545,9 +559,9 @@
       npp = 0
       if(idproc .eq. 0) then
           part(1,1) = delta(1) * nx /2.0
-          part(2,1) = delta(2) * nyp/4.0
+          part(2,1) = delta(2) * nyp/8.0
           part(3,1) = 0.0
-          part(4,1) = 100.0
+          part(4,1) = 1000.0
           part(5,1) = 0.0
           npp = 1
           ierr = 0
@@ -584,18 +598,24 @@
       irc = 0
       call mpdblkp2(part,kpic,npp,noff,nppmx,mx,my,mx1,delta,irc)
 ! allocate vector macro electrons data
-      nppmx0 = (1.0 + xtras)*nppmx
+      nppmx0 = (1.0 + xtras)*nppmx + 10
       ntmaxp = xtras*nppmx
       npbmx = xtras*nppmx
       nbmaxp = 0.25*mx1*npbmx
       allocate(ppart(idimp,nppmx0,mxyp1))
       allocate(ncl(8,mxyp1),ihole(2,ntmaxp+1,mxyp1))
-      allocate(ppart_test(idimp,10,1))
 !
 ! copy ordered macro electrons data for OpenMP
       call mpmovin2(part,ppart,kpic,npp,noff,mx,my,mx1,delta,irc)
 ! sanity check for macro electrons
       call mpcheck2(ppart,kpic,noff,nyp,nx,mx,my,mx1,nypmx,x,yp,irc)
+!     do i=1,size(kpic) 
+!         if(kpic(i)==1) then 
+!             write(*,*) 'i=',i
+!             write(*,*) ppart(1,1,i),ppart(2,1,i), ppart(3,1,i), ppart(4,1,i), ppart(5,1,i)
+!         end if
+!     end do
+
 !
 ! find number of macro ions in each of mx, my tiles: updates kpici, nppmxi
 	  if (movion) then
@@ -725,6 +745,7 @@
                  sfield(ix,iy) = qe(ix,iy)
               end do
          end do
+         write(*,*) 'write rho'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='\rho', filenamebase = 'currents',  &
@@ -736,6 +757,7 @@
                  sfield(ix,iy) = cue(1,ix,iy)
               end do
          end do
+         write(*,*) 'write jx'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jx', filenamebase = 'currents',  &
@@ -748,6 +770,7 @@
                  sfield(ix,iy) = cue(2,ix,iy)
               end do
          end do
+         write(*,*) 'write jy'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jy', filenamebase = 'currents',  &
@@ -760,6 +783,7 @@
                  sfield(ix,iy) = cue(3,ix,iy)
               end do
          end do
+         write(*,*) 'write jz'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jz', filenamebase = 'currents',  &
@@ -852,8 +876,8 @@
         if ((phtime >= tlaunch) .and. laserpulse) then
          !  isign = 1
 
-            call LaunchLaser(cutot,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
-                           FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
+!           call LaunchLaser(cutot,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
+!                          FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
             ! copy guard cells with OpenMP: updates fxyze, bxyze
     !       call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
     !       call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
@@ -887,16 +911,16 @@
      &indy,kstrt,nvp,kyp,ny,nterf,ierr)
 !
 ! Diagnostic of the two first particle distribution moments in Fourier space ( M Touati )
-      if (store_cond) then
-        call mprdvmodes2(cut,cuf,tdiag,nx,ny,modesx,modesy,kstrt)
-        call mprdmodes2(qt,qf,tdiag,nx,ny,modesx,modesy,kstrt)
-        call DIAG_FOURIER_MOMENTS(N_rho_Fourier, N_rho_Fourier_arg,&
-                                  N_jx_Fourier, N_jx_Fourier_arg,&
-                                  N_jy_Fourier, N_jy_Fourier_arg,&
-                                  N_jz_Fourier, N_jz_Fourier_arg,&
-                                  modesyd, modesxpd, kxp, nye,&
-                                  de, phtime, kpx, ky, qf, cuf, tdiag)
-      end if
+!     if (store_cond) then
+!       call mprdvmodes2(cut,cuf,tdiag,nx,ny,modesx,modesy,kstrt)
+!       call mprdmodes2(qt,qf,tdiag,nx,ny,modesx,modesy,kstrt)
+!        call DIAG_FOURIER_MOMENTS(N_rho_Fourier, N_rho_Fourier_arg,&
+!                                  N_jx_Fourier, N_jx_Fourier_arg,&
+!                                  N_jy_Fourier, N_jy_Fourier_arg,&
+!                                 N_jz_Fourier, N_jz_Fourier_arg,&
+!                                 modesyd, modesxpd, kxp, nye,&
+!                                 de, phtime, kpx, ky, qf, cuf, tdiag)
+!     end if
 !
 ! take transverse part of current with OpenMP: updates cut
       call mpcuperp2(cut,FDTD,tfield,nx,ny,kstrt,kx,ky)
@@ -952,10 +976,13 @@
       we = we * volume
       wf = wf * volume
       wm = wm * volume
+      write(*,*)'TIME = ',n,we,wf,wm
+
 !
 ! calculate longitudinal force/charge in fourier space with OpenMP:
 ! updates fxyt, we
       call mppois2(qt,fxyt,ffc,we,tfield,nx,ny,kstrt,kx,ky)
+      if((fxyt(1,1,1)) .ne. fxyt(1,1,1)) write(*,*) 'FXYT NAN alert, TIME=',n, we
 !
 
 !
@@ -966,29 +993,49 @@
 ! copy magnetic field with OpenMP: updates bxyt
       isign = -1
       call mpemfield2(bxyt,bxyz,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+      if((bxyz(1,1,1)) .ne. bxyz(1,1,1)) write(*,*) 'BXYZ NAN alert, TIME=',n, wm
+
+!     do i=1,nye
+!         do j=1,kxp
+!             if((bxyz(1,i,j)) .ne. bxyz(1,i,j)) write(*,*) 'BXYZ NAN alert',i,j,'TIME=',n
+!         end do
+!     end do
+
 ! Diagnostic of electromagnetic fields in Fourier space ( M Touati )
-      if (store_cond) then
-        call mprdvmodes2(exyz,exyzf,tdiag,nx,ny,modesx,modesy,kstrt)
-        call mprdvmodes2(bxyz,bxyzf,tdiag,nx,ny,modesx,modesy,kstrt)
-        call DIAG_FOURIER_FIELDS(N_Ex_Fourier, N_Ey_Fourier, N_Ez_Fourier,&
-                                 N_Bx_Fourier, N_By_Fourier, N_Bz_Fourier,&
-                                 N_Ex_Fourier_arg, N_Ey_Fourier_arg, N_Ez_Fourier_arg,&
-                                 N_Bx_Fourier_arg, N_By_Fourier_arg, N_Bz_Fourier_arg,&
-                                 modesxpd, modesyd, kxp, nye,&
-                                 de, phtime, kpx, ky, exyzf, bxyzf, tdiag)
-      end if
+!     if (store_cond) then
+!       call mprdvmodes2(exyz,exyzf,tdiag,nx,ny,modesx,modesy,kstrt)
+!       call mprdvmodes2(bxyz,bxyzf,tdiag,nx,ny,modesx,modesy,kstrt)
+!       call DIAG_FOURIER_FIELDS(N_Ex_Fourier, N_Ey_Fourier, N_Ez_Fourier,&
+!                                N_Bx_Fourier, N_By_Fourier, N_Bz_Fourier,&
+!                                N_Ex_Fourier_arg, N_Ey_Fourier_arg, N_Ez_Fourier_arg,&
+!                                N_Bx_Fourier_arg, N_By_Fourier_arg, N_Bz_Fourier_arg,&
+!                                modesxpd, modesyd, kxp, nye,&
+!                                de, phtime, kpx, ky, exyzf, bxyzf, tdiag)
+!     end if
+
 !
 ! transform force to real space with OpenMP:
 ! updates fxyze, nterf, and ierr, modifies fxyt
       isign = 1
       call wmpfft2rn(fxyze,fxyt,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
      &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
+!     do i=1,nye
+!         do j=1,kxp
+!             if((fxyt(1,i,j)) .ne. fxyt(1,i,j)) write(*,*) 'NAN alert',i,j
+!         end do
+!     end do
 !
 ! transform magnetic field to real space with OpenMP:
 ! updates bxyze, nterf, and ierr, modifies bxyt
       isign = 1
       call wmpfft2rn(bxyze,bxyt,noff,nyp,isign,mixup,sct,tfft,tfmov,indx&
      &,indy,kstrt,nvp,kyp,ny,nterf,ierr)
+!     do i=1,nye
+!         do j=1,kxp
+!             if((bxyt(1,i,j)) .ne. bxyt(1,i,j)) write(*,*) 'NAN alert',i,j
+!         end do
+!     end do
+
 !
 ! add constant to magnetic field with OpenMP: updates bxyze
       if (omt > 0.0) call mpbaddext2(bxyze,nyp,tfield,omx,omy,omz,nx)
@@ -1007,6 +1054,7 @@
                  sfield(ix,iy) = fxyze(1,ix,iy)
               end do
          end do
+         write(*,*) 'write ex'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E1', filenamebase = 'EandB',  &
@@ -1014,6 +1062,7 @@
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
 !    &   position=(/0.0,0.0/))
 
+         write(*,*) 'write ey'
 !        call file%new(iter=ntime, axisLabels = (/'x','y'/), &
 !    & gridSpacing=delta, gridGlobalOffset=(/ 0.0d0, 0.0d0 /), &
 !    & basePath='MS',  records='E1')
@@ -1023,6 +1072,7 @@
                  sfield(ix,iy) = fxyze(2,ix,iy)
               end do
          end do
+         write(*,*) 'write ez'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E2',filenamebase ='EandB',filepath='EMF/')
@@ -1035,6 +1085,8 @@
                  sfield(ix,iy) = fxyze(3,ix,iy)
               end do
          end do
+
+         write(*,*) 'write bx'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='E3',filenamebase ='EandB',filepath='EMF/')
@@ -1049,6 +1101,7 @@
                  sfield(ix,iy) = bxyze(1,ix,iy)
               end do
          end do
+         write(*,*) 'write by'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B1', filenamebase = 'EandB',  &
@@ -1077,6 +1130,7 @@
                  sfield(ix,iy) = bxyze(3,ix,iy)
               end do
          end do
+         write(*,*) 'write bz'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
      &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='B3',filenamebase ='EandB',filepath='EMF/')
@@ -1093,9 +1147,13 @@
 ! push particles with OpenMP:
 ! updates ppart and wke, and possibly ncl, ihole, irc
     	wke = 0.0
+!	write(*,*)' BEFORE PUSH we, CHARGE, npp, test charge =', we, qbme, npp, ppart(:,1,265)
+        fxyze = 0.0
+        bxyze = 0.0
      	call wmpbpush2(ppart,fxyze,bxyze,kpic,ncl,ihole,noff,nyp,qbme,dt, &
     				  &dth,ci,wke,tpush,nx,ny,mx,my,mx1,ipbc,relativity,list,x,y,delta,  &
     				  &irc)   
+!	write(*,*)' AFTER PUSH npp, test charge =', npp, ppart(:,1,265)
     	wke = me_real * wke
 ! updates pparti and wki, and possibly ncli, iholei, irc ( M. Touati )
 	  	wki = 0.

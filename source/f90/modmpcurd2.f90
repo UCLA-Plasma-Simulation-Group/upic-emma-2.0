@@ -113,9 +113,9 @@
 !
 !-----------------------------------------------------------------------
 !      subroutine mprdjpost2(ppart,cu,kpic,noff,qm,dt,ci,tdjpost,nx,ny,mx&
-!     &,my,mx1,ipbc)                                                           ! M. Touati
+!     &,my,mx1,ipbc)                                                          
       subroutine mprdjpost2(ppart,cu,kpic,noff,qm,dt,ci,tdjpost,nx,ny,mx&
-     &,my,mx1,x,y,delta,ipbc)                                                  ! M. Touati
+     &,my,mx1,x,y,delta,ipbc)                                                 
 ! deposit current and update relativistic particle positions
       implicit none
       integer, intent(in) :: nx, ny, mx, my, mx1, ipbc
@@ -125,7 +125,7 @@
       real, dimension(:,:,:), intent(inout) :: ppart
       real, dimension(:,:,:), intent(inout) :: cu
       integer, dimension(:), intent(in) :: kpic
-      real, dimension(:), intent(in) :: x, y, delta                            ! M. Touati
+      real, dimension(:), intent(in) :: x, y, delta                            
 ! local data
       integer :: idimp, nppmx, nxv, nypmx, mxyp1
       integer, dimension(4) :: itime
@@ -138,9 +138,9 @@
       call dtimer(dtime,itime,-1)
 ! call low level procedure
 !      call PPGRJPPOST2L(ppart,cu,kpic,noff,qm,dt,ci,nppmx,idimp,nx,ny,mx&
-!     &,my,nxv,nypmx,mx1,mxyp1,ipbc)                                           ! M. Touati
+!     &,my,nxv,nypmx,mx1,mxyp1,ipbc)                                           
       call PPGRJPPOST2L(ppart,cu,kpic,noff,qm,dt,ci,nppmx,idimp,nx,ny,mx&
-     &,my,nxv,nypmx,mx1,mxyp1,x,y,delta,ipbc)                                  ! M. Touati
+     &,my,nxv,nypmx,mx1,mxyp1,x,y,delta,ipbc)                                  
 ! record time
       call dtimer(dtime,itime,1)
       tdjpost = tdjpost + real(dtime)

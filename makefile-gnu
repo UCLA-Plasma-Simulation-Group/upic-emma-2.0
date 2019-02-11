@@ -17,18 +17,18 @@ MPICC = mpicc -fopenmp
 CC = mpicc
 
 #OPTSF90 = -O3
-OPTSF90 = -O3 -fdefault-real-8 -fdefault-double-8
+OPTSF90 = -O3 -fdefault-real-8 -fdefault-double-8 -fbounds-check
 #OPTSF90 = -O3 -fcheck=bounds -fdefault-real-8 -fdefault-double-8
 #OPTSF90 = -O3 -fcheck=bounds -fdefault-real-8 -fdefault-double-8 -Wall -std=f95
 #OPTSF90 = -O3 -fcheck=bounds
 #OPTSF90 = -O3 -g -fbacktrace -fcheck=all -Wall
 
 #OPTSF77 = -O3
-OPTSF77 = -O3 -fdefault-real-8 -fdefault-double-8
+OPTSF77 = -O3 -fdefault-real-8 -fdefault-double-8 -fbounds-check
 #OPTSF77 = -O3 -fcheck=bounds -fdefault-real-8 -Wall
 #OPTSF77 = -O1 -g -fbacktrace #-fdefault-real-8 -Wall
 
-OPTSCC = -O3 -std=c99
+OPTSCC = -O3 -std=c99 -fbounds-check
 #OPTSCC = -O3 -Wall -std=c99
 
 ###################

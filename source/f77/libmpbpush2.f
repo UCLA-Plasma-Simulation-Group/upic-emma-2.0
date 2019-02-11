@@ -1392,8 +1392,8 @@
 !      real x, y                                                               ! M. Touati
       real xx, yy                                                              ! M. Touati
       real sfxy, sbxy
-      dimension sfxy(3,MXV,MYV), sbxy(3,MXV,MYV)
-!     dimension sfxy(3,mx+1,my+1), sbxy(3,mx+1,my+1)
+!     dimension sfxy(3,MXV,MYV), sbxy(3,MXV,MYV)
+      dimension sfxy(3,mx+1,my+1), sbxy(3,mx+1,my+1)
       double precision sum1, sum2
       qtmh = 0.5*qbm*dt
       ci2 = ci*ci

@@ -84,8 +84,8 @@
 !      real x, y, dx, dy, vx, vy, vz                                           ! M. Touati
       real xx, yy, dx, dy, vx, vy, vz                                          ! M. Touati
       real scu
-      dimension scu(3,MXV,MYV)
-!     dimension scu(3,mx+1,my+1)
+!     dimension scu(3,MXV,MYV)
+      dimension scu(3,mx+1,my+1)
 ! set boundary values
 !      edgelx = 0.0                                                            ! M. Touati
 !      edgely = 1.0                                                            ! M. Touati
@@ -835,8 +835,8 @@
       real xx, yy, dx, dy, vx, vy, vz, p2, gami                                ! M. Touati
       real anx, any, edgelx, edgely, edgerx, edgery
       real scu
-      dimension scu(3,MXV,MYV)
-!     dimension scu(3,mx+1,my+1)
+!     dimension scu(3,MXV,MYV)
+      dimension scu(3,mx+1,my+1)
       ci2 = ci*ci
 !      anx = real(nx)                                                          ! M. Touati
 !      any = real(ny)                                                          ! M. Touati
@@ -893,7 +893,9 @@
       xx = ppart(1,j,k)                                                        ! M. Touati
       yy = ppart(2,j,k)                                                        ! M. Touati
       nn = 1 + floor(xx/delta(1))                                              ! M. Touati
+      write(*,*) 'nn=',nn
       mm = 1 + floor(yy/delta(2))                                              ! M. Touati
+      write(*,*) 'mm=',mm
       dxp = xx - x(nn)                                                         ! M. Touati
       dyp = yy - y(mm)                                                         ! M. Touati
 ! find inverse gamma
@@ -1318,8 +1320,8 @@
 !      real x, y, dx, dy, vx, vy, vz, p2, v1, v2, v3, v4                       ! M. Touati
       real xx, yy, dx, dy, vx, vy, vz, p2, v1, v2, v3, v4                      ! M. Touati
       real samu
-      dimension samu(4,MXV,MYV)
-!     dimension samu(4,mx+1,my+1)
+!    dimension samu(4,MXV,MYV)
+      dimension samu(4,mx+1,my+1)
       ci2 = ci*ci
 ! error if local array is too small
 !     if ((mx.ge.MXV).or.(my.ge.MYV)) return
