@@ -14,7 +14,7 @@
 #                 memory)                                             #
 #                 if N_threads=0, the maximum possible value is used  #
 #                                                                     #
-# FTFD          = 0 for solving Maxwell eq. with the full spectral    #
+# FDTD          = 0 for solving Maxwell eq. with the full spectral    #
 #                   solver                                            #
 #              or N for emulating a Finite Time Finite Difference Yee #
 #                 scheme with an acuracy order N; in this case,       #
@@ -84,19 +84,19 @@
 #                                                                     #
 #######################################################################
 #
-#N_threads  2
+#N_threads  1
 #
-#FTFD 0
+#FDTD 0
 #
-#cfl 0.9
+#cfl 0.8
 #
 #relativistic .true.
 #
 #moving_ions .false.
 #
-#laserpulse  .true.
+#laserpulse  .false.
 #
-#plasma .false.
+#plasma .true.
 #
 #Delta_x 1.0
 #
@@ -104,9 +104,9 @@
 #
 #indx 10
 #
-#indy 6
+#indy 10
 #
-#t_end  500.
+#t_end  1200.
 #
 #units EM
 #
@@ -149,26 +149,29 @@
 #ionization_state 3.
 #
 ##ax  0.
-#ax .912871
+##ax .912871
+#ax 3.912871
 #
 ##ay  0.
-#ay .912871
+##ay .912871
+#ay 3.912871
 #
-#den_me  0.01
+#den_me  1.0
 #
-#Npic    1.
+#Npicx    1.
+#Npicy    1.
 #
 #param 1.
 #
-#ptx    1.
+#ptx    0.
 #
-#pty    1.
+#pty    0.
 #
-#ptz    1.
+#ptz    0.
 #
 #px0    0.
 #
-#py0    0.
+#py0    1000.
 #
 #pz0    0.
 #
@@ -232,7 +235,7 @@
 #
 #tlaunch 0.
 #
-#FWHMt 1000.
+#FWHMt 0.
 #
 #xfocal 64.
 #
@@ -242,7 +245,7 @@
 #
 #omega0 0.5
 #
-#a0 1.
+#a0 0.
 #
 #######################################################################
 #                       Boundary conditions                           #
@@ -269,7 +272,7 @@
 #                                                                     #
 #######################################################################
 #
-#BCx 0
+#BCx 1
 #
 #BCy 1
 #
@@ -290,7 +293,7 @@
 #######################################################################
 #
 
-#Delta_t_diag 50.
+#Delta_t_diag 100.
 #######################################################################
 #                        density profile :                            #
 #######################################################################
@@ -303,5 +306,5 @@
 #######################################################################
 #
 
-#density_x 0.00001
-#density_y 0.00001
+#density_x 1.0
+#density_y 1.0

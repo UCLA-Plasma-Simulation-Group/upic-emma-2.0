@@ -893,9 +893,9 @@
       xx = ppart(1,j,k)                                                        ! M. Touati
       yy = ppart(2,j,k)                                                        ! M. Touati
       nn = 1 + floor(xx/delta(1))                                              ! M. Touati
-      write(*,*) 'nn=',nn
+!     write(*,*) 'nn=',nn
       mm = 1 + floor(yy/delta(2))                                              ! M. Touati
-      write(*,*) 'mm=',mm
+!     write(*,*) 'mm=',mm
       dxp = xx - x(nn)                                                         ! M. Touati
       dyp = yy - y(mm)                                                         ! M. Touati
 ! find inverse gamma

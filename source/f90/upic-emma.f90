@@ -75,7 +75,7 @@
 ! wpsrc = time integrated source of electrical energy in the simulation box per MPI node
       real :: wke = 0.0, we = 0.0, wf = 0.0, wm = 0.0, wt = 0.0, wsrc = 0., wpsrc = 0., wl =0.0
 ! sorting tiles, should be less than or equal to 32
-      integer :: mx = 16, my = 1024
+      integer :: mx = 8, my = 2048
 ! fraction of extra particles needed for particle management
       real :: xtras = 0.5 !xtras = 0.2
 ! list = (true,false) = list of particles leaving tiles found in push
@@ -112,7 +112,7 @@
       real, dimension(:,:,:), allocatable :: pixyze
 ! exyz/bxyz = transverse electric/magnetic field in fourier space
       complex, dimension(:,:,:), allocatable :: exyz, bxyz
-! exyz/bxyz = laser electric/magnetic field in fourier space
+! exyzl/bxyzl = laser electric/magnetic field in fourier space
       complex, dimension(:,:,:), allocatable :: exyzl, bxyzl
 ! qt = scalar charge density field array in fourier space
       complex, dimension(:,:), allocatable :: qt
@@ -335,8 +335,6 @@
       		vy0 = py0
       		vz0 = pz0
       end select
-      write(*,*) 'after normalization'
-!     
       Ndiag = (4**indx) - 1
 ! initialize scalars for standard code
 ! np = total number of particles in simulation
@@ -356,6 +354,7 @@
 ! regular normalization
 !     affp = dble(nx)*dble(ny)/np
 
+!     
 
 ! Modification of affp for non square cells ( M Touati )
       volume = delta(1) * delta(2) * 1.
@@ -364,6 +363,13 @@
 ! original
 !	  affp = affp / den_me
 ! test charge --> nothing
+
+! DEBUG
+      write(*,*) 'after normalization'
+      write(*,*) 'affp=',affp
+      write(*,*) 'ci=', ci
+      write(*,*) 'de=', de
+! DEBUG
 	  
 ! Real and macro particles masses and charges ( M. Touati )
 	  qme_real = - 1.
@@ -396,6 +402,13 @@
          vy0i = 0.
          vz0i = 0.
       endif
+
+! DEBUG
+      write(*,*)'electron parameters:'
+      write(*,*)'qme=',qme
+      write(*,*)'me=',me
+! DEBUG
+
 !
 ! nvp = number of distributed memory nodes
 ! initialize for distributed memory parallel processing
@@ -561,7 +574,7 @@
           part(1,1) = delta(1) * nx /2.0
           part(2,1) = delta(2) * nyp/8.0
           part(3,1) = 0.0
-          part(4,1) = 1000.0
+          part(4,1) = 100.0
           part(5,1) = 0.0
           npp = 1
           ierr = 0
@@ -582,8 +595,17 @@
       if (movion) then 
       	npsi = 1
         nppi = 0
-      	call mpdistr2h(relativity,mi_real,ci,parti,edges,nppi,npsi,vtxi,vtyi,vtzi,vx0i,vy0i,vz0i,npx,npy,&
-                      &nx,ny,ipbc,x,y,density_x,density_y,ierr)
+      !	call mpdistr2h(relativity,mi_real,ci,parti,edges,nppi,npsi,vtxi,vtyi,vtzi,vx0i,vy0i,vz0i,npx,npy,&
+      !                &nx,ny,ipbc,x,y,density_x,density_y,ierr)
+      if(idproc .eq. 0) then
+          parti(1,1) = delta(1) * nx /2.0
+          parti(2,1) = delta(2) * nyp/8.0
+          parti(3,1) = 0.0
+          parti(4,1) = 0.0
+          parti(5,1) = 0.0
+          nppi = 1
+          ierr = 0
+      end if
 ! check for macro ions initialization error
      	if (ierr /= 0) then
         	if (kstrt==1) then
@@ -621,7 +643,7 @@
 	  if (movion) then
       	call mpdblkp2(parti,kpici,nppi,noff,nppmxi,mx,my,mx1,delta,irc)
 ! allocate vector macro ions data
-      	nppmx0i = (1.0 + xtras)*nppmxi
+      	nppmx0i = (1.0 + xtras)*nppmxi + 10
       	ntmaxpi = xtras*nppmxi
       	npbmxi  = xtras*nppmxi
       	nbmaxpi = 0.25*mx1*npbmxi
@@ -748,7 +770,7 @@
          write(*,*) 'write rho'
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
-     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='\rho', filenamebase = 'currents',  &
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='rho', filenamebase = 'currents',  &
      &   filepath='e-CURRENT/' )
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
@@ -1153,6 +1175,11 @@
      	call wmpbpush2(ppart,fxyze,bxyze,kpic,ncl,ihole,noff,nyp,qbme,dt, &
     				  &dth,ci,wke,tpush,nx,ny,mx,my,mx1,ipbc,relativity,list,x,y,delta,  &
     				  &irc)   
+!       do i=1,mxyp1 
+!           do j=1,kpic(i)
+!               if (ppart(4,j,i) .lt. 100) ppart(4,j,i) = ppart(4,j,i)+10.0
+!           end do
+!       end do
 !	write(*,*)' AFTER PUSH npp, test charge =', npp, ppart(:,1,265)
     	wke = me_real * wke
 ! updates pparti and wki, and possibly ncli, iholei, irc ( M. Touati )

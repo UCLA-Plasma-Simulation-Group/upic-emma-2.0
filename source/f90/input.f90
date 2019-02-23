@@ -18,8 +18,8 @@ module input
 		logical, public          :: test_charge
 		real, public             :: delta_x
 		real, public             :: delta_y
-      	integer, public          :: indx
-      	integer, public          :: indy
+      	        integer, public          :: indx
+      	        integer, public          :: indy
 		real, public             :: t_end
 		character(len=3), public :: units
 ! Plasma properties  :
@@ -35,7 +35,7 @@ module input
 ! Laser pulse properties
 		integer, public          :: propdir
 		real, public             :: theta
-        real, public             :: polardir
+                real, public             :: polardir
 		integer, public          :: shape
 		real, public             :: tlaunch
 		real, public             :: FWHMt, FWHMs
