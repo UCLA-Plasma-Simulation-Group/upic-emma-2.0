@@ -119,6 +119,10 @@
 ! cut = vector current density field array in fourier space
 ! fxyt/bxyt = vector electric/magnetic field in fourier space
       complex, dimension(:,:,:), allocatable :: cut, fxyt, bxyt
+! DEBUG - FST
+      complex, dimension(:,:,:), allocatable :: cut_diag
+! DEBUG
+
 ! ffc = form factor array for poisson solver
       complex, dimension(:,:), allocatable :: ffc
 ! mixup = bit reverse table for FFT
@@ -217,6 +221,9 @@
       real, dimension(:,:), allocatable :: qtot
 ! cutot = total current density with guard cells
 	  real, dimension(:,:,:), allocatable :: cutot
+! DEBUG
+	  real, dimension(:,:,:), allocatable :: cu_diag
+! DEBUG
 ! declare PML variables : 
 ! sigma = 2D PML conductivity. sigma(1,i,j) = sigma_x(x(i)) and sigma(2,i,j) = sigma_y(yp(j))
 ! vpml_exyz, vpml_bxyz = PML EM fields in the Fourier space
@@ -351,6 +358,7 @@
 ! test charge case
       np = 1
       affp = 1.0
+!     affp = dble(nx)*dble(ny)
 ! regular normalization
 !     affp = dble(nx)*dble(ny)/np
 
@@ -486,6 +494,11 @@
       	allocate(qi(nxe,nypmx),cui(ndim,nxe,nypmx))
       end if
       allocate(qtot(nxe,nypmx),cutot(ndim,nxe,nypmx))
+! DEBUG --> observe transverse current
+      allocate(cu_diag(ndim,nxe,nypmx))
+      allocate(cut_diag(ndim,nye,kxp))
+
+!
 ! Prepare spatial gridpoint and spatial frequency arrays ( M. Touati )
       allocate(x(nxe),y(nye),kx(nxe),ky(nye),yp(nypmx),kpx(kxp))
       moff = kxp * (kstrt - 1)
@@ -570,15 +583,20 @@
 ! test charge
 ! 
       npp = 0
+! XX
+      p0 = 1000
+      gamma0 = sqrt(1 + p0*p0)
+      beta0 = sqrt(1 - 1.0/(gamma0*gamma0))
       if(idproc .eq. 0) then
           part(1,1) = delta(1) * nx /2.0
-          part(2,1) = delta(2) * nyp/8.0
+          part(2,1) = delta(2) * nyp/32.0
           part(3,1) = 0.0
-          part(4,1) = 100.0
+          part(4,1) = p0
           part(5,1) = 0.0
           npp = 1
           ierr = 0
       end if
+! XX
       write(*,*) part(1,1),part(2,1),part(3,1),part(4,1),part(5,1)
       ! call mpdistr2h(relativity,me_real,ci,part,edges,npp,nps,vtx,vty,vtz,vx0,vy0,vz0,npx,npy,&
       !		        &nx,ny,ipbc,x,y,density_x,density_y,ierr)
@@ -599,7 +617,7 @@
       !                &nx,ny,ipbc,x,y,density_x,density_y,ierr)
       if(idproc .eq. 0) then
           parti(1,1) = delta(1) * nx /2.0
-          parti(2,1) = delta(2) * nyp/8.0
+          parti(2,1) = delta(2) * nyp/32.0
           parti(3,1) = 0.0
           parti(4,1) = 0.0
           parti(5,1) = 0.0
@@ -754,7 +772,7 @@
       		call wmpaguard2(qi,nyp,tguard,nx,kstrt,nvp)
 	  	end if
 ! Diagnostic of the two first particle distribution moments in real space ( M Touati )
-	  cutot = cue
+      cutot = cue
       qtot  = qe
       if (movion) then
         cutot = cutot + cui
@@ -821,13 +839,13 @@
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
-     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='\rho', filenamebase = 'currents',  &
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='rho', filenamebase = 'currents',  &
      &   filepath='i-CURRENT/' )
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
       do ix=1,nx
              do iy=1,nyp
-                 sfield(ix,iy) = cue(1,ix,iy)
+                 sfield(ix,iy) = cu_diag(1,ix,iy)
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
@@ -839,19 +857,19 @@
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
       do ix=1,nx
              do iy=1,nyp
-                 sfield(ix,iy) = cue(2,ix,iy)
+                 sfield(ix,iy) = cu_diag(2,ix,iy)
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
      &   gridSpacing = real(delta,4), position=(/ 0.0_4, 0.0_4 /), & 
-     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jy', filenamebase = 'four-currents',  &
+     &   gridGlobalOffset=(/ 0.0d0, 0.0d0 /) , records='jy', filenamebase = 'currents',  &
      &   filepath='i-CURRENT/' )
 !    &   gridGlobalOffset=(/0.0d0, 0.0d0/),&
 !    &   position=(/0.0,0.0/))
          call pwfield(pp,file,sfield,(/nx,ny/),(/nx,nyp/),(/0,noff/),ierr)
          do ix=1,nx
              do iy=1,nyp
-                 sfield(ix,iy) = cue(3,ix,iy)
+                 sfield(ix,iy) = cu_diag(3,ix,iy)
               end do
          end do
          call file%new(iter=ntime, basePath='MS', axisLabels=(/'x','y'/), &
@@ -946,6 +964,12 @@
 !
 ! take transverse part of current with OpenMP: updates cut
       call mpcuperp2(cut,FDTD,tfield,nx,ny,kstrt,kx,ky)
+      write(*,*) 'DC Current=', cut(2,1,1)
+
+      isign = 1
+      cut_diag = cut
+      call wmpfft2rn(cu_diag,cut_diag,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+     &indy,kstrt,nvp,kyp,ny,nterf,ierr)
 !
 ! calculate electromagnetic fields in fourier space with OpenMP:
 ! updates exyz, bxyz, wf, wm
@@ -1004,7 +1028,9 @@
 ! calculate longitudinal force/charge in fourier space with OpenMP:
 ! updates fxyt, we
       call mppois2(qt,fxyt,ffc,we,tfield,nx,ny,kstrt,kx,ky)
-      if((fxyt(1,1,1)) .ne. fxyt(1,1,1)) write(*,*) 'FXYT NAN alert, TIME=',n, we
+! DEBUG
+!      if((fxyt(1,1,1)) .ne. fxyt(1,1,1)) write(*,*) 'FXYT NAN alert, TIME=',n, we
+! DEBUG
 !
 
 !
@@ -1015,7 +1041,9 @@
 ! copy magnetic field with OpenMP: updates bxyt
       isign = -1
       call mpemfield2(bxyt,bxyz,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-      if((bxyz(1,1,1)) .ne. bxyz(1,1,1)) write(*,*) 'BXYZ NAN alert, TIME=',n, wm
+! DEBUG
+!      if((bxyz(1,1,1)) .ne. bxyz(1,1,1)) write(*,*) 'BXYZ NAN alert, TIME=',n, wm
+! DEBUG
 
 !     do i=1,nye
 !         do j=1,kxp
@@ -1175,12 +1203,14 @@
      	call wmpbpush2(ppart,fxyze,bxyze,kpic,ncl,ihole,noff,nyp,qbme,dt, &
     				  &dth,ci,wke,tpush,nx,ny,mx,my,mx1,ipbc,relativity,list,x,y,delta,  &
     				  &irc)   
+! XX
 !       do i=1,mxyp1 
 !           do j=1,kpic(i)
 !               if (ppart(4,j,i) .lt. 100) ppart(4,j,i) = ppart(4,j,i)+10.0
 !           end do
 !       end do
 !	write(*,*)' AFTER PUSH npp, test charge =', npp, ppart(:,1,265)
+! XX
     	wke = me_real * wke
 ! updates pparti and wki, and possibly ncli, iholei, irc ( M. Touati )
 	  	wki = 0.

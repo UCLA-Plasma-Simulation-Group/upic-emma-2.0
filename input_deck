@@ -88,11 +88,11 @@
 #
 #FDTD 0
 #
-#cfl 0.8
+#cfl 0.95
 #
 #relativistic .true.
 #
-#moving_ions .false.
+#moving_ions .true.
 #
 #laserpulse  .false.
 #
@@ -104,9 +104,9 @@
 #
 #indx 10
 #
-#indy 10
+#indy 12
 #
-#t_end  1200.
+#t_end  2000.
 #
 #units EM
 #
@@ -150,11 +150,11 @@
 #
 ##ax  0.
 ##ax .912871
-#ax 3.912871
+#ax 0.912871
 #
 ##ay  0.
 ##ay .912871
-#ay 3.912871
+#ay 0.912871
 #
 #den_me  1.0
 #

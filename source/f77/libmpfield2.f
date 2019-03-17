@@ -460,16 +460,16 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
          k1 = nyh + 1
 ! kx = ky = 0
 ! IDTF[jx](kx(1)=0  ,-ky(1)=0) = cmplx(real(cu(1,1,1)),0.0)
-		 cu_1_1(1) = cmplx(real(cu(1,1,1)),0.0)
-		 cu_1_1(2) = cmplx(real(cu(2,1,1)),0.0)
-		 cu_1_1(3) = cmplx(real(cu(3,1,1)),0.0)
+	 cu_1_1(1) = cmplx(real(cu(1,1,1)),0.0)
+	 cu_1_1(2) = cmplx(real(cu(2,1,1)),0.0)
+	 cu_1_1(3) = cmplx(real(cu(3,1,1)),0.0)
 ! kx = nx/2 and ky = 0
 ! IDFT[jx](kx(nxh+1),-ky(1)=0)   = cmplx(aimag(cu(1,1,1)),0.0)
          cu_j1_1(1) = zero
          cu_j1_1(2) = zero
          cu_j1_1(3) = zero
 ! packed :
-		 cu(1,1,1) = cmplx(real(cu_1_1(1)),real(cu_j1_1(1)))
+	 cu(1,1,1) = cmplx(real(cu_1_1(1)),real(cu_j1_1(1)))
          cu(2,1,1) = cmplx(real(cu_1_1(2)),real(cu_j1_1(2)))
          cu(3,1,1) = cmplx(real(cu_1_1(3)),real(cu_j1_1(3)))
 ! kx = 0 and ky = ny/2
@@ -1029,12 +1029,12 @@ C        wp = wp + at1*(q(k1,j)*conjg(q(k1,j)))
 ! IDTF[Ex](kx(1)=0  ,-ky(1)=0) = cmplx(real(exy(1,1,1)),0.0)
          afdt = adt
          cu_temp = 0.0
-         exy_1_1(1) = zero
-         exy_1_1(2) = zero
-         exy_1_1(3) = zero
-         bxy_1_1(1) = zero
-         bxy_1_1(2) = zero
-         bxy_1_1(3) = zero
+!        exy_1_1(1) = zero
+!        exy_1_1(2) = zero
+!        exy_1_1(3) = zero
+!        bxy_1_1(1) = zero
+!        bxy_1_1(2) = zero
+!        bxy_1_1(3) = zero
 ! kx = nx/2 and ky = 0
 ! IDFT[Ex](kx(nxh+1),-ky(1)=0)   = cmplx(aimag(exy(1,1,1)),0.0)
          exy_j1_1(1) = zero
