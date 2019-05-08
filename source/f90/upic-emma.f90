@@ -57,6 +57,8 @@
 ! vtz/vz0 = thermal/drift velocity of electrons in z direction
 !           which is not spatially resolved in this 2D-3P code
       real :: vtz, vz0
+! BOOST
+      real :: gamma0, beta0, p0
 ! ci = reciprocal of velocity of light.
 	  real :: ci
 ! idimp = dimension of phase space = 5
@@ -357,7 +359,7 @@
       mx1 = (nx - 1)/mx + 1
 ! test charge case
       np = 1
-      affp = 1.0
+      affp = 1.0/(delta(1)*delta(2))
 !     affp = dble(nx)*dble(ny)
 ! regular normalization
 !     affp = dble(nx)*dble(ny)/np
@@ -714,6 +716,11 @@
 !
 ! Initialization of physical time
       phtime = 0.
+! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
+! LOOP STARTS
+! ------------------------------------------------------------------------
+! ------------------------------------------------------------------------
       do n = 1, nloop 
       ntime = n - 1
 ! Simulation results are saved every dphtime :
