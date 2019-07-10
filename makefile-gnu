@@ -68,9 +68,9 @@ MOD_PATH =
 
 TRG_PATH = 
 
-OPENPMD_PATH = ../../Fortran-OpenPMD-File-Writers/
+OPENPMD_PATH = ../Fortran-OpenPMD-File-Writers/
 # OPENPMD_PATH = /Users/franktsung/vst-extra/FranksFolder/Work/codes/Fortran-OpenPMD-File-Writers
-HDF_LIBPATH = -L/usr/local/lib -lhdf5_fortran -lhdf5_hl -lhdf5 -lz
+HDF_LIBPATH = -L/usr/local/lib -lhdf5_fortran -lhdf5_hl -lhdf5 
 
 #############
 # shortcuts #
