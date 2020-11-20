@@ -62,16 +62,16 @@ doxygen Doxyfile
 
 
 #######################################################################
-#             Plasma properties (useful only if plasma = 1) :         #
+###             Plasma properties (useful only if plasma = 1) :         #
 #######################################################################
 #                                                                     #
-# atomic_weight      = plasma atomic weight A (g/mol)                 #
+#### atomic_weight      = plasma atomic weight A (g/mol)                 #
 #                                                                     #
-# atomic_number      = plasma atomic number Z ()                      #
+#### atomic_number      = plasma atomic number Z ()                      #
 #                                                                     #
-# ionization_state   = plasma ionization state Z* ()                  #
+#### ionization_state   = plasma ionization state Z* ()                  #
 #                                                                     #
-# ax/ay          = smoothed particle size in x/y direction            #
+#### ax/ay          = smoothed particle size in x/y direction            #
 #                                                                     #
 # den_me         = Number of electrons per macro electron             #
 #                                                                     #
