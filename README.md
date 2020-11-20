@@ -71,26 +71,26 @@ doxygen Doxyfile
 #                                                                     #
 * ionization_state   = plasma ionization state Z* ()                  #
 #                                                                     #
-#### ax/ay          = smoothed particle size in x/y direction            #
+* ax/ay          = smoothed particle size in x/y direction            #
 #                                                                     #
-# den_me         = Number of electrons per macro electron             #
+* den_me         = Number of electrons per macro electron             #
 #                                                                     #
-# Npic           = Number of macro electrons per spatial cell         #
+* Npic           = Number of macro electrons per spatial cell         #
 #                                                                     #
-# param          = vTe / c with c the velocity of light in vacuum     #
+* param          = vTe / c with c the velocity of light in vacuum     #
 #                                                                     #
-# ptx, pty, ptz  = root mean square electron momentum (relativistic=1)#
-#                  or velocity (relativistic = 0) components in the x,#
-#                  components in the x, y and z directions resp.      #
-#                  in units of ( me ) Delta omega_p                   #
-#                  Be careful, since Te = (Te,x + Te,y + Te,z) / 3,   #
-#                  vTe = sqrt( (vtx^2 + vty^2 + vtz^2) / 3 )          #
-#                  must be respected                                  #
-#                                                                     #
-# px0, py0, pz0  = mean plasma momentum (relativistic=1) or velocity  #
-#                  (relativistic = 0) components in the x, y and z    #
-#                  directions resp.                                   #
-#                                                                     #
+* ptx, pty, ptz  = root mean square electron momentum (relativistic=1)#
+                  or velocity (relativistic = 0) components in the x,#
+                  components in the x, y and z directions resp.      #
+                  in units of ( me ) Delta omega_p                   #
+                  Be careful, since Te = (Te,x + Te,y + Te,z) / 3,   #
+                  vTe = sqrt( (vtx^2 + vty^2 + vtz^2) / 3 )          #
+                  must be respected                                  #
+                  #
+* px0, py0, pz0  = mean plasma momentum (relativistic=1) or velocity  #
+                  (relativistic = 0) components in the x, y and z    #
+                  directions resp.                                   #
+                                                                     #
 #######################################################################
 
 Revision History:
