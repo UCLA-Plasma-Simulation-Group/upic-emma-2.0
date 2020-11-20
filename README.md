@@ -34,12 +34,26 @@ doxygen Doxyfile
 ## Input parameters:
 
 * N_threads (integer): number of OpenMP threads
-* FDTD (integer): FDTD=1 -> finite difference operator follows FDTD FDTD=0 -> use traditional difference opreator ( i k )
+* FDTD (integer): FDTD=1 -> finite difference operator of N-th order (N is even), or 0 -> use traditional difference opreator ( i k )
 * cfl (real): timestep in terms of the CFL condition, if cfl=0.95 then dt is 0.95 * CFL limit
 * laserpulse (logical): if laserpulse = .TRUE. then a laser is initialized
 * relativistic (logical): if relativistic = .TRUE., then relativity is turned on for orbit integration
 * moving_ions (logical): if moving_ions = .TRUE., then ions are mobile and have mass, if .FALSE., then ions are treated as immobile fluid
-* 
+* Delta_x, Delta_y   = spatial cells dimension in units of (Delta)
+* indx, indy = spatial dimensions of the simulation box    along the x and y axis. Pay attention :        #
+                      The number of gridpoints Nx and Ny            
+                      along x and y axis must be a power of 2 due   
+                      to the FFT algorithm. We impose so :          
+                      Nx = 2^indx and Ny = 2^indy where             
+                      indx = 1 + floor(ln(Lx/Delta_x)/ln(2)) and
+                      indy = 1 + floor(ln(Ly/Delta_y)/ln(2))
+                      such that Lx = 2^indx and Ly = 2^indy
+                      For example, with Delta = 1. :
+                      Lx = 2, 4, 16 , 32, 64, 128, 256, 512, 1024,  
+                           2048, 4096, 8192, 16384, 32768, 65536,   
+                           131072, ... with                         
+                      indx = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+                             13, 14, 15, 16, 17, ... respectively  
 
 
 
