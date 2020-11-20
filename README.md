@@ -13,12 +13,16 @@ New features include:
 
 * non-square cells
 * FDTD operators for benchmarking
+* PSATD operator for boosted-frame simulation
 * additional boundary conditions for fields and particles to allow the study of laser plasma interactions at different intensities.
 * OpenPMD support
 
 Upcoming features include:
 
 * binary collision
+* Galilean transformation
+* OpenACC/OpenMP with offloading support
+
 
 
 It also supports Doxygen documentation, to use it, type:
@@ -27,8 +31,12 @@ doxygen Doxyfile
 
 
 
+## Input parameters:
+
 
 
 Revision History:
 
 1/8/2018:  Initial README (F. S. Tsung)
+11/19/2020: Adding documentation for input deck
+
