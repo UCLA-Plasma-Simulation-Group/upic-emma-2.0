@@ -127,14 +127,14 @@ doxygen Doxyfile
                                                                      #
 
 ###                       Boundary conditions                           #
-                                                                     #
- BCx = 1 (periodic) or 0 (absorbing)                                 #
+                                                                    
+ * BCx = 1 (periodic) or 0 (absorbing)                                 #
        condition along the x-axis for both particles and fields      #
                                                                      #
- BCy = 1 (periodic) or 0 (absorbing)                                 #
+ * BCy = 1 (periodic) or 0 (absorbing)                                 #
        condition along the y-axis for both particles and fields      #
                                                                      #
- For absorbing cond., the Perfectly Matched Layer (PML) technique    #
+ * For absorbing cond., the Perfectly Matched Layer (PML) technique    #
                       is used for the E-M fields (Berenger, 1996) :  #
                       _ PML_scheme = 0 : Yee scheme                  #
                         PML_scheme = 1 : Implicit scheme             #
