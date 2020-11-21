@@ -158,7 +158,6 @@ doxygen Doxyfile
               and y is x2. many math functions and branching         #
               function are supported.                                #
                                                                      #
-######################################################################
 
 Revision History:
 
