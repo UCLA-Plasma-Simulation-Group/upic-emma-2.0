@@ -923,23 +923,23 @@
         if ((phtime >= tlaunch) .and. laserpulse) then
          !  isign = 1
 
-!           call LaunchLaser(cutot,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
-!                          FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
+            call LaunchLaser(cutot,bxyze,wl,x,yp,affp,delta,ci,dt,phtime,L_PML,theta,polardir,tlaunch,FWHMt,&
+                           FWHMs,xfocal,yfocal,omega0,a0,BCx,BCy,nx,nyp,nxe,nypmx,ntime,propdir,shape,laserpulse)
             ! copy guard cells with OpenMP: updates fxyze, bxyze
-    !       call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
-    !       call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
+            call wmpncguard2(fxyze,nyp,tguard,nx,kstrt,nvp)
+            call wmpncguard2(bxyze,nyp,tguard,nx,kstrt,nvp)
             ! ! transform E-M fields to Fourier space with OpenMP:
             ! isign = -1
-    !       call wmpfft2rn(fxyze,exyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
-    !           &indy,kstrt,nvp,kyp,ny,nterf,ierr)
-    !       call wmpfft2rn(bxyze,bxyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
-    !           &indy,kstrt,nvp,kyp,ny,nterf,ierr)
+            call wmpfft2rn(fxyze,exyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+                &indy,kstrt,nvp,kyp,ny,nterf,ierr)
+            call wmpfft2rn(bxyze,bxyzl,noff,nyp,isign,mixup,sct,tfft,tfmov,indx,  &
+                &indy,kstrt,nvp,kyp,ny,nterf,ierr)
     !       ! Filter laser fields and add it to the electromagnetic fields with OpenMP:
          !  isign = 1
-    !       call mpemfield2(exyz,exyzl,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-    !       call mpemfield2(bxyz,bxyzl,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
-!           exyz = exyz + exyzl
-!           bxyz = bxyz + bxyzl
+            call mpemfield2(exyz,exyzl,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+            call mpemfield2(bxyz,bxyzl,FDTD,ffc,isign,kx,ky,ax,ay,tfield,nx,ny,kstrt)
+            exyz = exyz + exyzl
+            bxyz = bxyz + bxyzl
         end if
 
 

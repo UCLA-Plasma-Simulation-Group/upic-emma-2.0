@@ -17,7 +17,7 @@ MPICC = mpicc -fopenmp
 CC = mpicc
 
 #OPTSF90 = -O3
-OPTSF90 = -O3 -fdefault-real-8 -fdefault-double-8 -fbounds-check
+OPTSF90 = -O3 -fdefault-real-8 -fdefault-double-8 -fbounds-check -std=legacy
 #OPTSF90 = -O3 -fcheck=bounds -fdefault-real-8 -fdefault-double-8
 #OPTSF90 = -O3 -fcheck=bounds -fdefault-real-8 -fdefault-double-8 -Wall -std=f95
 #OPTSF90 = -O3 -fcheck=bounds
@@ -68,7 +68,7 @@ MOD_PATH =
 
 TRG_PATH = 
 
-OPENPMD_PATH = ../Fortran-OpenPMD-File-Writers/
+OPENPMD_PATH = ../../Fortran-OpenPMD-File-Writers/
 # OPENPMD_PATH = /Users/franktsung/vst-extra/FranksFolder/Work/codes/Fortran-OpenPMD-File-Writers
 HDF_LIBPATH = -L/usr/local/lib -lhdf5_fortran -lhdf5_hl -lhdf5 
 

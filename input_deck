@@ -14,7 +14,7 @@
 #                 memory)                                             #
 #                 if N_threads=0, the maximum possible value is used  #
 #                                                                     #
-# FDTD          = 0 for solving Maxwell eq. with the full spectral    #
+# FTFD          = 0 for solving Maxwell eq. with the full spectral    #
 #                   solver                                            #
 #              or N for emulating a Finite Time Finite Difference Yee #
 #                 scheme with an acuracy order N; in this case,       #
@@ -84,29 +84,29 @@
 #                                                                     #
 #######################################################################
 #
-#N_threads  1
+#N_threads  8
 #
-#FDTD 0
+#FTFD 4
 #
-#cfl 0.95
+#cfl 0.85
 #
 #relativistic .true.
 #
-#moving_ions .true.
+#moving_ions .false.
 #
-#laserpulse  .false.
+#laserpulse  .true.
 #
-#plasma .true.
+#plasma .false.
 #
 #Delta_x 1.0
 #
-#Delta_y 0.1
+#Delta_y 5000.0
 #
-#indx 10
+#indx 11
 #
-#indy 15
+#indy 4
 #
-#t_end  200.
+#t_end  3000.
 #
 #units EM
 #
@@ -149,29 +149,26 @@
 #ionization_state 3.
 #
 ##ax  0.
-##ax .912871
-#ax 0.912871
+#ax .912871
 #
 ##ay  0.
-##ay .912871
-#ay 0.912871
+#ay .912871
 #
-#den_me  1.0
+#den_me  0.01
 #
-#Npicx    1.
-#Npicy    1.
+#Npic    1.
 #
 #param 1.
 #
-#ptx    0.
+#ptx    1.
 #
-#pty    0.
+#pty    1.
 #
-#ptz    0.
+#ptz    1.
 #
 #px0    0.
 #
-#py0    1000.
+#py0    0.
 #
 #pz0    0.
 #
@@ -229,23 +226,23 @@
 #
 #theta 0.
 #
-#polardir 1.
+#polardir 0.
 #
 #shape 0
 #
 #tlaunch 0.
 #
-#FWHMt 0.
+#FWHMt 500.
 #
 #xfocal 64.
 #
 #yfocal 64.
 #
-#FWHMs 10.
+#FWHMs 100000.
 #
 #omega0 0.5
 #
-#a0 0.
+#a0 1.00
 #
 #######################################################################
 #                       Boundary conditions                           #
@@ -272,15 +269,15 @@
 #                                                                     #
 #######################################################################
 #
-#BCx 1
+#BCx 0
 #
 #BCy 1
 #
 #PML_scheme 1
 #
-#L_PML 10.
+#L_PML 20.
 #
-#n_cond_PML 3.5
+#n_cond_PML 3.2
 #
 #######################################################################
 #                            Diagnostics :                            #
@@ -293,7 +290,7 @@
 #######################################################################
 #
 
-#Delta_t_diag 20.
+#Delta_t_diag 200.
 #######################################################################
 #                        density profile :                            #
 #######################################################################
@@ -306,5 +303,5 @@
 #######################################################################
 #
 
-#density_x 1.0
-#density_y 1.0
+#density_x 0.00001
+#density_y 0.00001
